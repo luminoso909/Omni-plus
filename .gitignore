@@ -1,0 +1,56 @@
+# Python and development tools
+.venv/
+.python/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+.DS_Store
+
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+
+# Downloaded datasets, model weights, caches, and training outputs
+/dataset/
+/datasets/
+/data/
+/weights/
+/checkpoints/
+/outputs/
+/out/
+/runs/
+/wandb/
+/cache/
+/.cache/
+**/checkpoint-*/
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+*.onnx
+*.gguf
+*.h5
+*.hdf5
+*.parquet
+*.arrow
+*.tar
+*.tar.gz
+*.zip
+
+# Raw audio stays outside Git; small experiment summaries remain trackable
+*.wav
+*.flac
+*.mp3
+*.m4a
+*.ogg
+*.aac
+*.pcm
