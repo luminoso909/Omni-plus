@@ -9,7 +9,7 @@ from transformers import AutoConfig, AutoModelForCausalLM
 from transformers.modeling_outputs import MoeCausalLMOutputWithPast
 
 from omni.models.thinker import OmniPlusConfig, OmniPlusForCausalLM, OmniPlusModel
-from omni.models.thinker.model_lm import MOEFeedForward, RMSNorm, RotaryPositionalEmbedding
+from omni.models.thinker.model_thinker import MOEFeedForward, RMSNorm, RotaryPositionalEmbedding
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from jaxtyping import Float, Int
 from torch import Tensor, nn
 
 from ..config import OmniPlusConfig
-from ..thinker.model_lm import AttentionMask, OmniPlusTransformerBlock, PastKeyValues, RMSNorm
+from ..thinker.model_thinker import AttentionMask, OmniPlusTransformerBlock, PastKeyValues, RMSNorm
 
 type AudioCodes = Int[Tensor, "batch codebooks frames"]
 

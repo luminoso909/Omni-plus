@@ -14,7 +14,7 @@ from transformers.modeling_outputs import MoeCausalLMOutputWithPast
 from .config import OmniPlusConfig
 from .encoders.model_encoders import Projector
 from .talker.model_talker import AudioCodes, TalkerModule
-from .thinker.model_lm import AttentionMask, OmniPlusForCausalLM, PastKeyValues
+from .thinker.model_thinker import AttentionMask, OmniPlusForCausalLM, PastKeyValues
 
 type ModalFeatures = list[Float[Tensor, "tokens features"] | None]
 
