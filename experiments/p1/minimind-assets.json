@@ -1,0 +1,89 @@
+{
+  "reference_root": "/Users/lucius/projects/personal/minimind-o",
+  "reference_commit": "b5d1bc11ece8de17404cbc034c3e09718d0fecdf",
+  "reference_code": {
+    "path": "/Users/lucius/projects/personal/minimind-o/model/model_minimind.py",
+    "bytes": 18986,
+    "sha256": "548f1203282dccb3be43227b11463f469b976afbab614df52828bdd246c3786f"
+  },
+  "license": "Apache-2.0",
+  "license_source": {
+    "path": "/Users/lucius/projects/personal/minimind-o/out/README.md",
+    "bytes": 439,
+    "sha256": "ca840af0abdad7e46a6b555ceed524a2d4f36407b903c92ff09d4ccfd1df927b"
+  },
+  "files": [
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/out/llm_768.pth",
+        "bytes": 137683346,
+        "sha256": "5b8c49f6c9d965092e651cafeeaeb8705558632b3fd4ac8ab319cbc5a3cbc4a0"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/weights/minimind/llm_768.pth",
+        "bytes": 137683346,
+        "sha256": "5b8c49f6c9d965092e651cafeeaeb8705558632b3fd4ac8ab319cbc5a3cbc4a0"
+      }
+    },
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/out/llm_768_moe.pth",
+        "bytes": 406719725,
+        "sha256": "a050020ea6d1b9e824693d0db525b1a0a8b40f36a934ea8d89da161368f20cc1"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/weights/minimind/llm_768_moe.pth",
+        "bytes": 406719725,
+        "sha256": "a050020ea6d1b9e824693d0db525b1a0a8b40f36a934ea8d89da161368f20cc1"
+      }
+    },
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/model/tokenizer.json",
+        "bytes": 451182,
+        "sha256": "71f32c68cf63a15355a8fc171b7594b3d41870fe0ddb54fc6aefa55f73a4a668"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/tokenizers/minimind/tokenizer.json",
+        "bytes": 451182,
+        "sha256": "71f32c68cf63a15355a8fc171b7594b3d41870fe0ddb54fc6aefa55f73a4a668"
+      }
+    },
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/model/tokenizer_config.json",
+        "bytes": 13308,
+        "sha256": "d7cd6a60c9f191c4f9ffec69b2eb289ad2f960366724f328b681ae1e46e4c110"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/tokenizers/minimind/tokenizer_config.json",
+        "bytes": 13308,
+        "sha256": "d7cd6a60c9f191c4f9ffec69b2eb289ad2f960366724f328b681ae1e46e4c110"
+      }
+    },
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/LICENSE",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/weights/minimind/LICENSE",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "source": {
+        "path": "/Users/lucius/projects/personal/minimind-o/out/README.md",
+        "bytes": 439,
+        "sha256": "ca840af0abdad7e46a6b555ceed524a2d4f36407b903c92ff09d4ccfd1df927b"
+      },
+      "local": {
+        "path": "/Users/lucius/projects/personal/Omni++/weights/minimind/README.md",
+        "bytes": 439,
+        "sha256": "ca840af0abdad7e46a6b555ceed524a2d4f36407b903c92ff09d4ccfd1df927b"
+      }
+    }
+  ]
+}

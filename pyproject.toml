@@ -5,12 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Omni-plus"
 version = "0.0.1"
-description = "Independent omni-modal model reproduction and research (P0 bootstrap)"
+description = "Independent omni-modal model reproduction and text baseline validation"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "torch>=2.6,<3",
-    "transformers>=4.51,<5",
+    "transformers>=4.57.6,<5",
+    "huggingface-hub>=0.36.2,<1",
     "datasets>=3,<5",
     "pyarrow>=21",
     "numpy>=1.26,<3",
@@ -39,7 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 # jaxtyping 的 Shape 字符串不是 Python forward reference；保留其它未定义变量检查。
-"omni/models/thinker/model_lm.py" = ["F722"]
+"omni/models/thinker/model_thinker.py" = ["F722"]
 "omni/models/model_omni.py" = ["F722"]
 "omni/models/encoders/model_encoders.py" = ["F722"]
 "omni/models/talker/model_talker.py" = ["F722"]

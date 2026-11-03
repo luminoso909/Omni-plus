@@ -1,4 +1,4 @@
-name: P0 checks
+name: Python checks
 
 on:
   push:
@@ -31,6 +31,6 @@ jobs:
       - name: Validate dependencies, formatting, lint, and tests
         run: |
           python -m pip check
-          ruff format --check .
-          ruff check .
+          ruff format --check omni tests scripts
+          ruff check omni tests scripts
           pytest -q

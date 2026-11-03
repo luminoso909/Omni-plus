@@ -684,6 +684,7 @@ source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "einops" },
+    { name = "huggingface-hub" },
     { name = "jaxtyping" },
     { name = "numpy" },
     { name = "pyarrow" },
@@ -703,6 +704,7 @@ dev = [
 requires-dist = [
     { name = "datasets", specifier = ">=3,<5" },
     { name = "einops", specifier = ">=0.8,<1" },
+    { name = "huggingface-hub", specifier = ">=0.36.2,<1" },
     { name = "jaxtyping", specifier = ">=0.3.11" },
     { name = "numpy", specifier = ">=1.26,<3" },
     { name = "pyarrow", specifier = ">=21" },
@@ -711,7 +713,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11,<1" },
     { name = "safetensors", specifier = ">=0.5,<1" },
     { name = "torch", specifier = ">=2.6,<3" },
-    { name = "transformers", specifier = ">=4.51,<5" },
+    { name = "transformers", specifier = ">=4.57.6,<5" },
 ]
 provides-extras = ["dev"]
 
