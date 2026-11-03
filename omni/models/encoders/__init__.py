@@ -1,1 +1,5 @@
-"""Omni-plus P0 package placeholder; algorithms are not implemented."""
+"""音频与视觉特征的投影接口。"""
+
+from .model_encoders import Projector
+
+__all__ = ["Projector"]

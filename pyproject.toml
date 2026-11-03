@@ -12,6 +12,7 @@ dependencies = [
     "torch>=2.6,<3",
     "transformers>=4.51,<5",
     "datasets>=3,<5",
+    "pyarrow>=21",
     "numpy>=1.26,<3",
     "einops>=0.8,<1",
     "safetensors>=0.5,<1",
@@ -39,3 +40,6 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # jaxtyping 的 Shape 字符串不是 Python forward reference；保留其它未定义变量检查。
 "omni/models/thinker/model_lm.py" = ["F722"]
+"omni/models/model_omni.py" = ["F722"]
+"omni/models/encoders/model_encoders.py" = ["F722"]
+"omni/models/talker/model_talker.py" = ["F722"]

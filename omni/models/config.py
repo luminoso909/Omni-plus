@@ -1,4 +1,4 @@
-"""Thinker 配置；多模态字段仅预留，不构造编码器或下载资源。"""
+"""Thinker、Talker 与多模态接口配置；不构造编码器或下载资源。"""
 
 import math
 from typing import Any
@@ -47,24 +47,30 @@ class OmniPlusConfig(PretrainedConfig):
         moe_intermediate_size: int | None = None,
         norm_topk_prob: bool = True,
         router_aux_loss_coef: float = 5e-4,
-        # Talker：语音生成主干与码本词表（预留）
+        # Talker：独立主干维度与音频码本
         num_talker_hidden_layers: int = 4,
         talker_hidden_size: int = 768,
+        talker_num_attention_heads: int = 8,
+        talker_num_key_value_heads: int | None = 4,
+        talker_intermediate_size: int | None = None,
+        num_audio_codebooks: int = 8,
+        talker_adapter_rank: int = 256,
+        audio_codebook_size: int = 2048,
         audio_vocab_size: int = 2112,
         audio_pad_token: int = 2049,
         audio_stop_token: int = 2050,
         audio_spk_token: int = 2051,
         spk_emb_size: int = 192,
-        # 多模态输入：音频占位符与编码器输出维度（预留）
+        # 多模态输入：音频占位符与编码器输出维度
         audio_ids: list[int] | None = None,
         audio_special_token: str = "<|audio_pad|>",
         audio_hidden_size: int = 512,
-        # 多模态输入：图像占位符、编码器维度与 Token 数（预留）
+        # 多模态输入：图像占位符、编码器维度与 Token 数
         image_ids: list[int] | None = None,
         image_special_token: str = "<|image_pad|>",
         image_hidden_size: int = 768,
         image_token_len: int = 64,
-        # Bridge：Thinker 条件特征的取层位置（预留）
+        # Bridge：Thinker 条件特征的取层位置
         bridge_layer: int | None = None,
         # Hugging Face 通用配置字段
         **kwargs: Any,
@@ -135,27 +141,33 @@ class OmniPlusConfig(PretrainedConfig):
         self.norm_topk_prob = norm_topk_prob
         self.router_aux_loss_coef = router_aux_loss_coef
 
-        # Talker：语音生成主干与码本词表（预留）
+        # Talker：独立主干维度与音频码本
         self.num_talker_hidden_layers = num_talker_hidden_layers
         self.talker_hidden_size = talker_hidden_size
+        self.talker_num_attention_heads = talker_num_attention_heads
+        self.talker_num_key_value_heads = talker_num_key_value_heads
+        self.talker_intermediate_size = talker_intermediate_size
+        self.num_audio_codebooks = num_audio_codebooks
+        self.talker_adapter_rank = talker_adapter_rank
+        self.audio_codebook_size = audio_codebook_size
         self.audio_vocab_size = audio_vocab_size
         self.audio_pad_token = audio_pad_token
         self.audio_stop_token = audio_stop_token
         self.audio_spk_token = audio_spk_token
         self.spk_emb_size = spk_emb_size
 
-        # 多模态输入：音频占位符与编码器输出维度（预留）
+        # 多模态输入：音频占位符与编码器输出维度
         self.audio_ids = [16] if audio_ids is None else list(audio_ids)
         self.audio_special_token = audio_special_token
         self.audio_hidden_size = audio_hidden_size
 
-        # 多模态输入：图像占位符、编码器维度与 Token 数（预留）
+        # 多模态输入：图像占位符、编码器维度与 Token 数
         self.image_ids = [12] if image_ids is None else list(image_ids)
         self.image_special_token = image_special_token
         self.image_hidden_size = image_hidden_size
         self.image_token_len = image_token_len
 
-        # Bridge：Thinker 条件特征的取层位置（预留）
+        # Bridge：Thinker 条件特征的取层位置
         self.bridge_layer = (
             max(0, num_hidden_layers // 2 - 1) if bridge_layer is None else bridge_layer
         )

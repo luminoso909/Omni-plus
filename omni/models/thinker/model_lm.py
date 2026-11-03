@@ -17,7 +17,7 @@ from transformers.activations import ACT2FN
 from transformers.generation.streamers import BaseStreamer
 from transformers.modeling_outputs import MoeCausalLMOutputWithPast
 
-from .config import OmniPlusConfig
+from ..config import OmniPlusConfig
 
 type KeyValue = tuple[
     Float[Tensor, "batch kv_heads total_seq head_dim"],
