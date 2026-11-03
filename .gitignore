@@ -22,7 +22,13 @@ htmlcov/
 /dataset/
 /datasets/
 /data/
-/weights/
+# 权重目录仅跟踪占位；实际文件全部忽略。
+/weights/**
+!/weights/thinker/
+!/weights/thinker/.gitkeep
+/tokenizers/**
+!/tokenizers/thinker/
+!/tokenizers/thinker/.gitkeep
 /checkpoints/
 /outputs/
 /out/
