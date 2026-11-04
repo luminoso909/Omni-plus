@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "device": "mps",
+  "from_step": 25,
+  "to_step": 50,
+  "model_max_abs_diff": 4.906207323074341e-06,
+  "model_bitwise_equal": false,
+  "progress_equal": true,
+  "scaler_equal": true,
+  "rtol": 0.0001,
+  "atol": 0.0001,
+  "original_report": "/Users/lucius/projects/personal/Omni++/experiments/p4/20261104T125629601507Z/report.json",
+  "resumed_report": "/Users/lucius/projects/personal/Omni++/experiments/p4/20261104T125738431639Z/report.json",
+  "scope": "真实64条缓存的恢复分支与连续训练同一步权重对照；CPU完整状态精确对照另见单测",
+  "checked_at_utc": "2026-11-04T12:57:43.286498+00:00"
+}

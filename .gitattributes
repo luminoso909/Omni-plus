@@ -1,0 +1,2 @@
+# CSV writer uses standard CRLF. Preserve original experiment bytes and SHA-256.
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

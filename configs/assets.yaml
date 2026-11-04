@@ -13,3 +13,15 @@ qwen3:
   enable_thinking: false
 
 # Qwen3.5-0.8B 仅列在 docs/项目待办.md，本轮不下载。
+
+# P2/P3 资产只读引用；不复制或修改旧仓库。
+multimodal:
+  sensevoice: ../minimind-o/model/SenseVoiceSmall
+  siglip: ../minimind-o/model/siglip2-base-p32-256-ve
+  mimi: ../minimind-o/model/mimi
+  sft_dense: ../minimind-o/out/sft_omni_768.pth
+
+p4:
+  prepared: .cache/p4/prepared
+  features: cache/p4
+  data_manifest: experiments/p4/data.json

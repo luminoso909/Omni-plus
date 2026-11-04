@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "path": "experiments/p4/20261104T125629601507Z/loss.csv",
+      "sha256": "f3c2a361f262a9d962b85022ba812fb673296ecf0c6e2e2c32c28f523c3e24fc"
+    },
+    {
+      "path": "experiments/p4/20261104T125745458973Z/loss.csv",
+      "sha256": "99d6a127f40505351748471467dc59f321233c77c0fb904ac68240a0e4e0a113"
+    }
+  ],
+  "rows": 649,
+  "same_step_policy": "The resumed run is used for a repeated split/step; source CSV files remain unchanged.",
+  "chart": "overfit-loss.png"
+}

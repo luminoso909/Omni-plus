@@ -1,0 +1,341 @@
+{
+  "repo_id": "jingyaogong/minimind-o_dataset",
+  "revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+  "declared_licenses": [
+    "apache-2.0",
+    "gpl-3.0"
+  ],
+  "license_note": "官方卡未逐文件区分两项许可；子集仅本地诊断，不公开再分发。",
+  "extraction": "Dictionary pages and initial data pages; first batch decoded by PyArrow.",
+  "transferred_bytes": 21348796,
+  "full_dataset_downloaded": false,
+  "format": {
+    "url": "https://raw.githubusercontent.com/apache/parquet-format/apache-parquet-format-2.11.0/",
+    "sha256": "bf8e93151ebe8eebbb8f3c829d97f0dd537dc43f411d03df15837ffaa2a749cf",
+    "thriftpy2_version": "0.5.2"
+  },
+  "files": [
+    {
+      "task": "t2a",
+      "source_file": "sft_t2a_mini.parquet",
+      "source_size": 1558442729,
+      "official_full_file_sha256": "dfe44b8b263ecd0579627160cf258b363b4c18457ae03221691e2e1a85e60ab8",
+      "full_file_downloaded": false,
+      "full_file_hash_verified": false,
+      "original_rows": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "retained_rows": 32,
+      "local_path": "cache/p4/sources/sft_t2a_mini.parquet",
+      "local_sha256": "11b4edbe417df8598445f14cf2d416c9edb9ec0df73c3a0a91ad8585c917a2f9",
+      "transferred_bytes": 1620302,
+      "ranges": [
+        {
+          "start": 1558442721,
+          "length": 8,
+          "sha256": "7692b6980f7802ff205329aff996b852c5f68c612bf7c2f574d263ecb135e0fb"
+        },
+        {
+          "start": 1558441007,
+          "length": 1714,
+          "sha256": "50ad3631f2ec4ed7aa3554260a73db18a12e97ee3ea8a36298e90f2c3b92c604"
+        },
+        {
+          "start": 4,
+          "length": 16384,
+          "sha256": "eace05af3886107a0b99684e29be953df839a82755fc2e2388f1ffd3f31f28a8"
+        },
+        {
+          "start": 16388,
+          "length": 603600,
+          "sha256": "6024e8d4119627190a22960f0a817e3ec2be67d57530269bfeba8cdb4357cf8a"
+        },
+        {
+          "start": 619988,
+          "length": 16384,
+          "sha256": "be3231af6bca06a85f0021f68a50bc2a424aafa2905cf240eca8d00f80754984"
+        },
+        {
+          "start": 158139726,
+          "length": 1159,
+          "sha256": "3e440097da99f46e0c3d2011596e0b832652c79b003f6c0228fb3b12fe486fba"
+        },
+        {
+          "start": 158139741,
+          "length": 1144,
+          "sha256": "bd51138378d2ff95235c5e831b91c1db782c23d4daa08d9a1063994d50bddcf2"
+        },
+        {
+          "start": 158140885,
+          "length": 16384,
+          "sha256": "39bf497187d41499ec503539a345b0950b9477380fa88915479234e740081194"
+        },
+        {
+          "start": 158149084,
+          "length": 16384,
+          "sha256": "5676402471ab491577373456872317388598d2fd4914c50583deb34cb32e55ce"
+        },
+        {
+          "start": 158165468,
+          "length": 947141,
+          "sha256": "abdf4ca470b16dc517dc3ca8bf685711939f1fbb6300a73a75ac382477e24869"
+        }
+      ]
+    },
+    {
+      "task": "a2a",
+      "source_file": "sft_a2a_mini.parquet",
+      "source_size": 881313734,
+      "official_full_file_sha256": "fba0159e424ee106c9e5a732fe607875b3780d0c9f8b6806038879acd279782b",
+      "full_file_downloaded": false,
+      "full_file_hash_verified": false,
+      "original_rows": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "retained_rows": 32,
+      "local_path": "cache/p4/sources/sft_a2a_mini.parquet",
+      "local_sha256": "50e3b0e026a56592c271ee2e7afa8e9c580eec2faa68d539d1d7e15ae3341b50",
+      "transferred_bytes": 9843027,
+      "ranges": [
+        {
+          "start": 881313726,
+          "length": 8,
+          "sha256": "5c82f1cee4879b9d6d6a4bc171d29b25f79abddccd13813262207c51c384dfb6"
+        },
+        {
+          "start": 881308127,
+          "length": 5599,
+          "sha256": "8c7fcf0ce6c4162566322e4ca36ca7258d6c899bb2cf4639be3affd87d60bd51"
+        },
+        {
+          "start": 4,
+          "length": 16384,
+          "sha256": "206ade6e95298d4643bb6761bd90d85b27e736ec05edddf2382fcdc7e8f453ef"
+        },
+        {
+          "start": 16388,
+          "length": 482823,
+          "sha256": "7787cf21386b4d7f461b6a650865405ec2f664f947f02d613a605b8756b5e70a"
+        },
+        {
+          "start": 499211,
+          "length": 16384,
+          "sha256": "8b514bc86db863ebdd89ac4b7248c01499a80daba84938bb193eae7c5e5b75b7"
+        },
+        {
+          "start": 17665781,
+          "length": 16384,
+          "sha256": "cbde4ff2743396fa1a9db2b05caba884e8b1fb276d2ff6196a7a1f1c459d51b8"
+        },
+        {
+          "start": 17673994,
+          "length": 16384,
+          "sha256": "f622f5b123ad21988876714a8960f1bddd225a0ab4950dca22fd35be007a24a5"
+        },
+        {
+          "start": 17690378,
+          "length": 871179,
+          "sha256": "4f0c83a320549bd883993932f366c81c10c16a149d27587cdbc10c1e81174288"
+        },
+        {
+          "start": 184518237,
+          "length": 16384,
+          "sha256": "a4f2169c520fcd2291ce91bdc97a9fe53f39a880b586d431c7c881cfa7f2b574"
+        },
+        {
+          "start": 184534621,
+          "length": 6347912,
+          "sha256": "0103761a0da03b56c44f40acf7636c6dbb70fa00a690167347e81d27e6b14596"
+        },
+        {
+          "start": 190882533,
+          "length": 16384,
+          "sha256": "da7538837cc42877c6c70ee1f2564a7ada95136be510d97e6d950025c03e18ad"
+        },
+        {
+          "start": 793603799,
+          "length": 16384,
+          "sha256": "2ba28ef28425e8c58f0bf873c7387220eb0918f51e3a0491347fe40858f398f0"
+        },
+        {
+          "start": 793612015,
+          "length": 16384,
+          "sha256": "45b28e266ddd8de59172ad44985505150ce614503428a46b6d08aa8f1005f41f"
+        },
+        {
+          "start": 793628399,
+          "length": 894608,
+          "sha256": "ff31196c54a2b0c60019c7d251f11f70cb8e4c73a69999113c1986815ee8c17b"
+        },
+        {
+          "start": 836850147,
+          "length": 16384,
+          "sha256": "0cb5c5dec25d54902df07a753bde034b82d084e3d68bb0d600300972b5d1723e"
+        },
+        {
+          "start": 836866531,
+          "length": 794512,
+          "sha256": "a2036d8470e6682988da1a1877e4416e355032e31f044c63a08a2c67002739b4"
+        },
+        {
+          "start": 837661043,
+          "length": 16384,
+          "sha256": "df520d5734771d0e95b499f33da802c2d11425003fe6b02673dce28e0d12ad07"
+        },
+        {
+          "start": 837677427,
+          "length": 282546,
+          "sha256": "43160f33eb18f35fe387d34ddd0d80101b6b72d440195876258d22de6c627fa9"
+        }
+      ]
+    },
+    {
+      "task": "i2t",
+      "source_file": "sft_i2t.parquet",
+      "source_size": 4934887104,
+      "official_full_file_sha256": "712f4026cd0e21b369feddca7334b1e465cb8182b5f298006f3f4f877f926643",
+      "full_file_downloaded": false,
+      "full_file_hash_verified": false,
+      "original_rows": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "retained_rows": 32,
+      "local_path": "cache/p4/sources/sft_i2t.parquet",
+      "local_sha256": "b38982e0b0d3000b3af9ea96eeb0e29f9ec817df1652890d8322544a62e85182",
+      "transferred_bytes": 9885467,
+      "ranges": [
+        {
+          "start": 4934887096,
+          "length": 8,
+          "sha256": "9adaa847cb094c67f14026c990d7221d2aae8c4c5534a6deb90489dcb1fefd68"
+        },
+        {
+          "start": 4933618480,
+          "length": 1268616,
+          "sha256": "a7f9ed779ba15acb35b0c394407e0421bb36b94219482e648ab5c1d620cde35e"
+        },
+        {
+          "start": 4,
+          "length": 16384,
+          "sha256": "6243566dd898e016a454426a634a80e25a31e56b8a177a8e2574c343f8bcda7a"
+        },
+        {
+          "start": 16388,
+          "length": 1411703,
+          "sha256": "6556920734c5ce93b074307c6c2191d34e76e2db7defe7a9c7c66865fba26f84"
+        },
+        {
+          "start": 1428091,
+          "length": 16384,
+          "sha256": "9da854cb7685fa25f96360b4f12ea985268b8d0b4d95214595942eb24e4e895d"
+        },
+        {
+          "start": 1444475,
+          "length": 7167539,
+          "sha256": "1beb538569c3748e547bcd581f2cb6091ddfe13038e41b25d54cfa3c59dec9ce"
+        },
+        {
+          "start": 8612014,
+          "length": 4833,
+          "sha256": "fe899893a6e039bada2ed884091df6f24b43a5ee3aa6bbbc6472f180d6c242bd"
+        }
+      ]
+    }
+  ],
+  "retained_candidate_rows": 96,
+  "prefix_pages_may_contain_additional_encoded_rows": true,
+  "upstream_card_sha256": "0efb7fe73ad9903a9f21d75b4bef6ecf889e2013cb8241bdeb99674c5d4fe238"
+}

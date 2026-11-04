@@ -1,0 +1,541 @@
+{
+  "seed": 42,
+  "pool_per_task": 128,
+  "sources": [
+    {
+      "task": "t2a",
+      "path": "/Users/lucius/projects/personal/Omni++/cache/p4/sources-v2/sft_t2a_mini.parquet",
+      "sha256": "11b4edbe417df8598445f14cf2d416c9edb9ec0df73c3a0a91ad8585c917a2f9",
+      "rows": 32
+    },
+    {
+      "task": "a2a",
+      "path": "/Users/lucius/projects/personal/Omni++/cache/p4/sources-v2/sft_a2a_mini.parquet",
+      "sha256": "0a36847c5d283c40ad64e50bce6297ece4c86d2c85aa97ae275b2de982c3475d",
+      "rows": 32
+    },
+    {
+      "task": "i2t",
+      "path": "/Users/lucius/projects/personal/Omni++/cache/p4/sources-v2/sft_i2t.parquet",
+      "sha256": "35210c86f006d52db0a30357d5b0fa455fb72c1bd61ef41e926f2c065085d389",
+      "rows": 32
+    }
+  ],
+  "splits": {
+    "train": [
+      {
+        "task": "t2a",
+        "source_row": 7,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 7,
+        "record_id": "52b583089d7c218ca1ef5b16e134c69bd6efa93b466c4b4fe0dbd1cb13c47286"
+      },
+      {
+        "task": "t2a",
+        "source_row": 0,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 0,
+        "record_id": "31cd77d1a63ce0011241ade2fe2da2443782575298d02bdbf5cc5647939c0e05"
+      },
+      {
+        "task": "t2a",
+        "source_row": 23,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 23,
+        "record_id": "0eddd9f76e139caaf28cef94f74284b115aed268ca6196ff66a7919f49f7c59f"
+      },
+      {
+        "task": "t2a",
+        "source_row": 8,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 8,
+        "record_id": "301c7d65424b85d97389f20c61e4bd36b1c6961f82384421327acb0fc6b0320e"
+      },
+      {
+        "task": "t2a",
+        "source_row": 31,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 31,
+        "record_id": "05ff97342621492431a1af448a3f34f1c199cf0c4bbf448bdee379405d48b494"
+      },
+      {
+        "task": "t2a",
+        "source_row": 27,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 27,
+        "record_id": "9c29da90447f8869a31f4e64e8a490feb55fff064c9842214bd4af7eb609b8ae"
+      },
+      {
+        "task": "t2a",
+        "source_row": 4,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 4,
+        "record_id": "dbb669ffb38a634579c53b0908ace868867d5fe4ff52092d0b1fa8997dcafd39"
+      },
+      {
+        "task": "t2a",
+        "source_row": 29,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 29,
+        "record_id": "78daffce821f30611de909a47c0b8019bb4cd1ab88fe7166d1741956ae2c104f"
+      },
+      {
+        "task": "t2a",
+        "source_row": 3,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 3,
+        "record_id": "b92e450dc6a1346570ce14de2dda4af36f09e8dbac70d2c2cfcea3dc4671f28a"
+      },
+      {
+        "task": "t2a",
+        "source_row": 21,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 21,
+        "record_id": "fdf4a8857479c47a19c44a0c61c28c0ef0ce52bc0c46ed89c8459b8db1936b92"
+      },
+      {
+        "task": "t2a",
+        "source_row": 17,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 17,
+        "record_id": "d79ed5fc9f98c3c4cccd228a8894046ad00ad7b0839d5e2e4be4ad4b68339df3"
+      },
+      {
+        "task": "t2a",
+        "source_row": 2,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 2,
+        "record_id": "14e8497c0e9a7acc7245fcee2c057f14b5ddb037cbcd78988b4f87929959ef99"
+      },
+      {
+        "task": "t2a",
+        "source_row": 18,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 18,
+        "record_id": "1c9da0ce4f65410fb0a1d98fba7aaf8e8d1b58220c5c6c58488659b2b7039031"
+      },
+      {
+        "task": "t2a",
+        "source_row": 13,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 13,
+        "record_id": "fd05b9463b19c3eb8730025fa5370bcf8322dc55a1831c8f7fc3a028076507b9"
+      },
+      {
+        "task": "t2a",
+        "source_row": 1,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 1,
+        "record_id": "a7affb2d07310a7bdca894a86282c852c8378e2d31fcc2ba2b42adb43e6274d4"
+      },
+      {
+        "task": "t2a",
+        "source_row": 30,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 30,
+        "record_id": "b2a324a97af858e37e3a39ff0229729d06ae09bd3f1e1b8a24f1032aead23110"
+      },
+      {
+        "task": "t2a",
+        "source_row": 20,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 20,
+        "record_id": "94e8eeecc71ef4319494bbb60f91f391c79cc7c8c44b600e808d1da64d28532c"
+      },
+      {
+        "task": "t2a",
+        "source_row": 24,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 24,
+        "record_id": "12ec36cc280def67abf9f27cb1de7967c275126dfd9974b0e1d611f9280dae4a"
+      },
+      {
+        "task": "t2a",
+        "source_row": 14,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 14,
+        "record_id": "e10ce35c7940f8f516fd94e52be475160a2e3f5372839b39ba25ab42a6c8f0b4"
+      },
+      {
+        "task": "t2a",
+        "source_row": 28,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 28,
+        "record_id": "87f1af7e1a29d1d637aca59fcf421e2f76753d71d17ecbf8cbd3c61a2d7827d7"
+      },
+      {
+        "task": "t2a",
+        "source_row": 9,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 9,
+        "record_id": "927c337f763499e60b066e634b591e5fd65184a057cff9e7fd38b8ef1e06b2e7"
+      },
+      {
+        "task": "t2a",
+        "source_row": 16,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 16,
+        "record_id": "b7559b94539345009c4f55f9f5fc02967c906bb4d9fb7ca33699cb286f3c0556"
+      },
+      {
+        "task": "a2a",
+        "source_row": 46,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 27,
+        "record_id": "4111a49bb2e8e2ed67afcfb6c86df238acb5d89c5665bf4366734794d73878b0"
+      },
+      {
+        "task": "a2a",
+        "source_row": 29,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 10,
+        "record_id": "c4ebe55df946d71a5c1e7c1df862bce51781b2dce9fcfb78357c124048954a1d"
+      },
+      {
+        "task": "a2a",
+        "source_row": 14,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 8,
+        "record_id": "5194ca92e5991242a048233718e6b2d0cd795323b1d9f692a94c50bda1a6392a"
+      },
+      {
+        "task": "a2a",
+        "source_row": 7,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 4,
+        "record_id": "3ce0ac917a3925e9d18163dfa45d4be135470819671e1ea91d20649cd7959beb"
+      },
+      {
+        "task": "a2a",
+        "source_row": 11,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 6,
+        "record_id": "34306293f57aaba795fea1eca166153ecbb79ff94d15636fb36af7dd0937157a"
+      },
+      {
+        "task": "a2a",
+        "source_row": 43,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 24,
+        "record_id": "17c0dfa8de928f87d1ba84cee78a88c7af1a735bd2d3257fdfbca46172a7df57"
+      },
+      {
+        "task": "a2a",
+        "source_row": 49,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 30,
+        "record_id": "3366d85e5754c2e8d3e93f53c88a0a523823c2163c06ef3591155b0c7019ccc6"
+      },
+      {
+        "task": "a2a",
+        "source_row": 6,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 3,
+        "record_id": "7d1fd879039df867773810d1d49316eae20f5bb09cf44ddaf7b627eaae28222d"
+      },
+      {
+        "task": "a2a",
+        "source_row": 3,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 2,
+        "record_id": "e8e7336c4674a0b738858063fbb638cdf6e10b8afef7c8689f97d38757397fff"
+      },
+      {
+        "task": "a2a",
+        "source_row": 31,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 12,
+        "record_id": "e3870c223cec8d5b23ad373e881bcfe4b0908039d26f45acaccc3746d7913757"
+      },
+      {
+        "task": "a2a",
+        "source_row": 45,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 26,
+        "record_id": "c64b99c5fb14151eb4acbaecc3f2fdfe4cdecdd6810a92db4268b4d5cf15ecd9"
+      },
+      {
+        "task": "a2a",
+        "source_row": 30,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 11,
+        "record_id": "c7a8c829648b2486145db112fb615f2d5e9f32500460d205ca3cf20a40e582b4"
+      },
+      {
+        "task": "a2a",
+        "source_row": 39,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 20,
+        "record_id": "55d11954d9b14dd2167547308d406b8972f26d83a9c3e5bde3e3727d043abbef"
+      },
+      {
+        "task": "a2a",
+        "source_row": 48,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 29,
+        "record_id": "aae7b934b3627df72460e24a1f50b9ca4432f799f338e8aa108715f89839daae"
+      },
+      {
+        "task": "a2a",
+        "source_row": 1,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 1,
+        "record_id": "99ee42c44a55707f50824ea6154a3de9b2012f7d0a6f4addece14ac2f2a01946"
+      },
+      {
+        "task": "a2a",
+        "source_row": 33,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 14,
+        "record_id": "c7b3a0378a151c047d545f5e98ee40d67cfc359f814d80d1fc9007ebb67c6374"
+      },
+      {
+        "task": "a2a",
+        "source_row": 40,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 21,
+        "record_id": "01cb7f18145fb4a27b06fe482f76029aa5adf8fc19086a45b35a0188c3e0ff75"
+      },
+      {
+        "task": "a2a",
+        "source_row": 35,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 16,
+        "record_id": "82ac999a12928276bdd74f41175c59124b480a40af3c94b7162d1458edac1b02"
+      },
+      {
+        "task": "a2a",
+        "source_row": 50,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 31,
+        "record_id": "2313cecbbe01d9b6fb66978418e4825b0329ebbf927d43e3338bc4db1c87c24b"
+      },
+      {
+        "task": "a2a",
+        "source_row": 36,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 17,
+        "record_id": "7737bab6d0ee08c604a5762a585c61ae21731da96a3c2269e9c7a79414f37113"
+      },
+      {
+        "task": "a2a",
+        "source_row": 37,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 18,
+        "record_id": "64eba11a227860149c0fdec2272a8a582fb43208f485220315cd02bf9a19d1b0"
+      },
+      {
+        "task": "i2t",
+        "source_row": 55,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 14,
+        "record_id": "9342089564a07a79bb7a7f976b558da4552de3ce337ffb7d5d0da7871490bddf"
+      },
+      {
+        "task": "i2t",
+        "source_row": 107,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 27,
+        "record_id": "66d0fb51c464fe1f61b6e6cb48cc898112c7b4124f314e2a43b4872caf4679d2"
+      },
+      {
+        "task": "i2t",
+        "source_row": 13,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 3,
+        "record_id": "a1eac089382888dcc4757749a5a013049ba2215e320b0f5756a431e79495fe94"
+      },
+      {
+        "task": "i2t",
+        "source_row": 47,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 12,
+        "record_id": "ece07263ee16661561d18b9d99d0c747763e9a40eb7ebe8d58c0ad8361811786"
+      },
+      {
+        "task": "i2t",
+        "source_row": 32,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 8,
+        "record_id": "3f29b353cf882c0b0b2737839f2aced1987c6a1fcdb43972aeca9a8d016be28b"
+      },
+      {
+        "task": "i2t",
+        "source_row": 123,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 31,
+        "record_id": "536305e9f961874e9b5349373e7b28e5852d793b8f8cca4960659a54407b97b9"
+      },
+      {
+        "task": "i2t",
+        "source_row": 79,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 20,
+        "record_id": "0941ed0b0f1d604ee0c9492a7e4299e875c8978c58b09dfa32db1da3dbb84cb1"
+      },
+      {
+        "task": "i2t",
+        "source_row": 44,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 11,
+        "record_id": "4b40674afa43688fe96b9eed14264bb3533cc3c55892ec1ef15018f278881719"
+      },
+      {
+        "task": "i2t",
+        "source_row": 21,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 5,
+        "record_id": "3b058c36dd742d63b36413abb4f2d8e441ee8dbfc91cc7937455cea2bd9c522f"
+      },
+      {
+        "task": "i2t",
+        "source_row": 95,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 24,
+        "record_id": "4328b3815323752617e726e1bc97cbfa9753304f22bd39483b36263f4cf7ca64"
+      },
+      {
+        "task": "i2t",
+        "source_row": 87,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 22,
+        "record_id": "2675364f011e2b475e38487ae4b0b99c259db0eabcdf9c6d46ce80192de288cc"
+      },
+      {
+        "task": "i2t",
+        "source_row": 25,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 6,
+        "record_id": "db29870f29047662a1a5aec9bca1fba96ff75f0d9f1c4317d5aa0accea6b44c7"
+      },
+      {
+        "task": "i2t",
+        "source_row": 119,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 30,
+        "record_id": "23c599e8077b274c751bd6e52f9c5c13c01655beba5e69a7c18ab1be91f1f52f"
+      },
+      {
+        "task": "i2t",
+        "source_row": 9,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 2,
+        "record_id": "52fa356fc56f0ece543420c527713f0f080565690671fa84fbef021a6152ee61"
+      },
+      {
+        "task": "i2t",
+        "source_row": 91,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 23,
+        "record_id": "cb8dcdf8e46c5e76aa22ba9695c76851a1ae9cd064cd649bd7ade131f91aee1d"
+      },
+      {
+        "task": "i2t",
+        "source_row": 29,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 7,
+        "record_id": "5095bb7980aa9cecabb23d5b513b59c81921e56f78141b2de8a855caa5e9db6f"
+      },
+      {
+        "task": "i2t",
+        "source_row": 67,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 17,
+        "record_id": "26d8b0889a646bd2b0e00b37af63f707ef82d9f92343368b3e6e891b4df5e642"
+      },
+      {
+        "task": "i2t",
+        "source_row": 63,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 16,
+        "record_id": "7ca5983b6fa2584b50a0216372881c10e417bd7213a848484f38f95ccd384cf0"
+      },
+      {
+        "task": "i2t",
+        "source_row": 99,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 25,
+        "record_id": "37eb470f52c0fded0026fd0428035d710c15535378643bb1de550fd2aba95b37"
+      },
+      {
+        "task": "i2t",
+        "source_row": 17,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 4,
+        "record_id": "296a7ef861a9519251d35ced70afef5c8fed85fb8099c76b259a75a5dbcc1380"
+      },
+      {
+        "task": "i2t",
+        "source_row": 40,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 10,
+        "record_id": "10d7e3687f5d96aaab8684c0b778425ab20888b1b0a569af0b72d06dd4944394"
+      }
+    ],
+    "validation": [
+      {
+        "task": "t2a",
+        "source_row": 12,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 12,
+        "record_id": "5647c134baa8fcd94ae6a59ee0989ea696e5abbccf6fee01a11458da8209be4d"
+      },
+      {
+        "task": "t2a",
+        "source_row": 19,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 19,
+        "record_id": "8681bf4fbd2b167337da9b2277506ec6bd1eeceefbfffbb4c102445c88e103f3"
+      },
+      {
+        "task": "t2a",
+        "source_row": 6,
+        "source_file": "sft_t2a_mini.parquet",
+        "subset_row": 6,
+        "record_id": "f5f814ea814eef6b9759d5c5e51daaec2dd4774f31ee865f3fb4c530587cf91f"
+      },
+      {
+        "task": "a2a",
+        "source_row": 47,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 28,
+        "record_id": "723612a100da00a7dae0958bd8226872fe162ce50bc696da3bf4c0cce3687f7f"
+      },
+      {
+        "task": "a2a",
+        "source_row": 22,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 9,
+        "record_id": "cadd716707b8a1780ccb6bba1fe3efca296bf14cdca0d05e4d0724bd5f915473"
+      },
+      {
+        "task": "a2a",
+        "source_row": 10,
+        "source_file": "sft_a2a_mini.parquet",
+        "subset_row": 5,
+        "record_id": "fc420b1616b6b65abc818226a428dfd0e96e3a4427d5014a6fe5bc2a0f9b62ba"
+      },
+      {
+        "task": "i2t",
+        "source_row": 75,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 19,
+        "record_id": "5eae8056f18138b7e35d39120fa68f82d8d3758d5175add80d08a1786d1ecbf4"
+      },
+      {
+        "task": "i2t",
+        "source_row": 115,
+        "source_file": "sft_i2t.parquet",
+        "subset_row": 29,
+        "record_id": "4423be7109e28f197c8a5c8a6aeea069669021c5612fcb3e0541538d5afb7be5"
+      }
+    ]
+  },
+  "paths": {
+    "train": "/Users/lucius/projects/personal/Omni++/.cache/p4/prepared/train.pt",
+    "validation": "/Users/lucius/projects/personal/Omni++/.cache/p4/prepared/validation.pt"
+  },
+  "overlap": 0,
+  "augmentation": false,
+  "license_note": "仅本地诊断使用；各数据集及其上游媒体许可需分别核实，不沿用代码许可证。"
+}

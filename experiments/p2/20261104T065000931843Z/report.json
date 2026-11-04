@@ -1,0 +1,104 @@
+{
+  "status": "passed",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 42,
+  "threads": 4,
+  "rtol": 0.0001,
+  "atol": 0.0001,
+  "weights": {
+    "path": "/Users/lucius/projects/personal/minimind-o/out/sft_omni_768.pth",
+    "bytes": 236155558,
+    "sha256": "5a05a617858453aa9490bb0ca9e22503e51dd8718348bc06d3a549ffecb589f8"
+  },
+  "loading": {
+    "keys": 195,
+    "missing": [],
+    "unexpected": []
+  },
+  "assets": [
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/model/SenseVoiceSmall/model.pt",
+      "bytes": 468291478,
+      "sha256": "218811976815c1673e1b852dc383d78987b229268f78e7ebd0a1fe67229c83dd"
+    },
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/model/siglip2-base-p32-256-ve/model.safetensors",
+      "bytes": 189129296,
+      "sha256": "c1e9cc19ed6704b87353ee00b9ff5d6191886d741898339984364f789c62810d"
+    },
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/dataset/eval_omni/audio-zh-01_你平时喜欢吃什么.mp3",
+      "bytes": 4484,
+      "sha256": "ce106efd77980ba102ec0ba4c1cbc846bc4932fd11a8e0bd37f3fcbcba1851be"
+    },
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/dataset/eval_omni/image-01-orange-cat-moon-desk.jpg",
+      "bytes": 17712,
+      "sha256": "fd2898ecc7a73cbf16d9c6f3ded1c59f176e6e8868a4c7699f814d6aba18f19a"
+    }
+  ],
+  "features": {
+    "audio_shape": [
+      23,
+      512
+    ],
+    "image_shape": [
+      64,
+      768
+    ]
+  },
+  "batch": {
+    "text_logits": [
+      4,
+      119,
+      6400
+    ],
+    "audio_logits": [
+      4,
+      8,
+      119,
+      2112
+    ]
+  },
+  "frozen_eval": true,
+  "deterministic_features": true,
+  "permutation_invariant": true,
+  "padding_labels_ignored": true,
+  "rows": [
+    {
+      "row": 0,
+      "has_audio": false,
+      "has_image": false,
+      "valid_tokens": 32,
+      "text_max_abs_diff": 2.193450927734375e-05,
+      "audio_max_abs_diff": 4.291534423828125e-05
+    },
+    {
+      "row": 1,
+      "has_audio": true,
+      "has_image": false,
+      "valid_tokens": 55,
+      "text_max_abs_diff": 1.33514404296875e-05,
+      "audio_max_abs_diff": 3.814697265625e-05
+    },
+    {
+      "row": 2,
+      "has_audio": false,
+      "has_image": true,
+      "valid_tokens": 96,
+      "text_max_abs_diff": 0.0,
+      "audio_max_abs_diff": 0.0
+    },
+    {
+      "row": 3,
+      "has_audio": true,
+      "has_image": true,
+      "valid_tokens": 119,
+      "text_max_abs_diff": 0.0,
+      "audio_max_abs_diff": 0.0
+    }
+  ],
+  "quality_note": "真实预训练编码器和 SFT 权重的前向、对齐验收；未评估识别/理解正确率。",
+  "checked_at_utc": "2026-11-04T06:50:00.917252+00:00"
+}

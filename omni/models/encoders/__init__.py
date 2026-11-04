@@ -1,5 +1,5 @@
-"""音频与视觉特征的投影接口。"""
+"""本地冻结音频、视觉编码器与特征投影。"""
 
-from .model_encoders import Projector
+from .model_encoders import Projector, SenseVoiceEncoder, SiglipEncoder
 
-__all__ = ["Projector"]
+__all__ = ["Projector", "SenseVoiceEncoder", "SiglipEncoder"]

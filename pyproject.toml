@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Omni-plus"
 version = "0.0.1"
-description = "Independent omni-modal model reproduction and text baseline validation"
+description = "Independent omni-modal reproduction and local SFT validation"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -23,6 +23,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
+media = ["Pillow>=10,<14", "soundfile>=0.13,<1", "scipy>=1.14,<2"]
+encoders = ["funasr==1.4.17", "torchaudio>=2.6,<3"]
+plots = ["matplotlib>=3.9,<4"]
+data = ["thriftpy2>=0.5.2,<0.6", "requests>=2.32,<3"]
 
 [tool.setuptools.packages.find]
 include = ["omni", "omni.*"]

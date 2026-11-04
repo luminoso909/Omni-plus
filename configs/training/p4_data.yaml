@@ -1,0 +1,16 @@
+# 相对路径从 Omni++ 根目录解析；不自动联网、不重复素材凑样本数。
+sources:
+  t2a: cache/p4/sources-v2/sft_t2a_mini.parquet
+  a2a: cache/p4/sources-v2/sft_a2a_mini.parquet
+  i2t: cache/p4/sources-v2/sft_i2t.parquet
+output_dir: .cache/p4/prepared
+report: experiments/p4/data.json
+feature_dir: cache/p4
+feature_report: experiments/p4/features.json
+train_size: 64
+validation_size: 8
+pool_per_task: 128
+seed: 42
+max_length: 1200
+reference_root: ../minimind-o
+tokenizer: tokenizers/minimind

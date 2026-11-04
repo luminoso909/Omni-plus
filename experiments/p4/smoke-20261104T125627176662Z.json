@@ -1,0 +1,84 @@
+{
+  "status": "passed",
+  "device": "mps",
+  "dtype": "float32",
+  "tasks": [
+    {
+      "task": "t2a",
+      "record_id": "52b583089d7c218ca1ef5b16e134c69bd6efa93b466c4b4fe0dbd1cb13c47286",
+      "input_shape": [
+        1,
+        58
+      ],
+      "audio_shape": [
+        1,
+        8,
+        58
+      ],
+      "has_audio_features": false,
+      "has_image_features": false,
+      "text_supervised": 10,
+      "audio_supervised": 216,
+      "losses": {
+        "total": 18.898662567138672,
+        "text": 8.758818626403809,
+        "audio": 10.139842987060547,
+        "aux": 0.0,
+        "grad_norm": 289.9910888671875,
+        "optimizer_updated": 1.0
+      }
+    },
+    {
+      "task": "a2a",
+      "record_id": "4111a49bb2e8e2ed67afcfb6c86df238acb5d89c5665bf4366734794d73878b0",
+      "input_shape": [
+        1,
+        149
+      ],
+      "audio_shape": [
+        1,
+        8,
+        149
+      ],
+      "has_audio_features": true,
+      "has_image_features": false,
+      "text_supervised": 26,
+      "audio_supervised": 672,
+      "losses": {
+        "total": 17.24483871459961,
+        "text": 8.756114959716797,
+        "audio": 8.488723754882812,
+        "aux": 0.0,
+        "grad_norm": 95.41283416748047,
+        "optimizer_updated": 1.0
+      }
+    },
+    {
+      "task": "i2t",
+      "record_id": "9342089564a07a79bb7a7f976b558da4552de3ce337ffb7d5d0da7871490bddf",
+      "input_shape": [
+        1,
+        316
+      ],
+      "audio_shape": [
+        1,
+        8,
+        316
+      ],
+      "has_audio_features": false,
+      "has_image_features": true,
+      "text_supervised": 206,
+      "audio_supervised": 0,
+      "losses": {
+        "total": 8.770721435546875,
+        "text": 8.770721435546875,
+        "audio": 0.0,
+        "aux": 0.0,
+        "grad_norm": 1.3458529710769653,
+        "optimizer_updated": 1.0
+      }
+    }
+  ],
+  "scope": "真实官方样本+冻结特征；小主干各任务一步更新，不是质量评测",
+  "checked_at_utc": "2026-11-04T12:56:27.176648+00:00"
+}

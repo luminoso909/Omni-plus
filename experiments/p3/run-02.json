@@ -1,0 +1,173 @@
+{
+  "run_id": "run-02",
+  "git_commit": "0e2ff93c6a56256b51a7bc538c910840df89f62f",
+  "reference_commit": "b5d1bc11ece8de17404cbc034c3e09718d0fecdf",
+  "checked_at_utc": "2026-11-04T06:50:10.959113+00:00",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 42,
+  "python_version": "3.12.14",
+  "torch_version": "2.15.0",
+  "transformers_version": "4.57.6",
+  "train_steps": 0,
+  "codec_weights": {
+    "path": "/Users/lucius/projects/personal/minimind-o/model/mimi/model.safetensors",
+    "bytes": 192346842,
+    "sha256": "7542ee039d3025d5089cf227d21df64b6b8eff08fcd376a11a1fbd178dd9d3f5"
+  },
+  "codec_model_card": {
+    "path": "/Users/lucius/projects/personal/minimind-o/model/mimi/README.md",
+    "bytes": 883,
+    "sha256": "f9fb84f348980ea0c076c416035a2cb7361a61f1a423f62a9ce258bb91667591"
+  },
+  "codec_license": "CC-BY-4.0",
+  "codec_source_note": "本地 Kyutai Mimi FP16 转换资产，验收时以 FP32 加载。",
+  "reference_code": [
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/model/model_minimind.py",
+      "bytes": 18986,
+      "sha256": "548f1203282dccb3be43227b11463f469b976afbab614df52828bdd246c3786f"
+    },
+    {
+      "path": "/Users/lucius/projects/personal/minimind-o/model/model_omni.py",
+      "bytes": 26553,
+      "sha256": "9a0de2b438b8927a170fe12636e01c00dbfec463ea5c4a81efdfc1cca6a6696c"
+    }
+  ],
+  "codec_only": {
+    "status": "passed",
+    "source": {
+      "path": "/Users/lucius/projects/personal/minimind-o/output_benchmark/cer_00.wav",
+      "bytes": 641324,
+      "sha256": "7633662467f60826ec400bd0a3e1cdf70879b9880a3e869e7a14f3fc3902c17c"
+    },
+    "waveform_samples": 48000,
+    "sampling_rate": 24000,
+    "codes_shape": [
+      1,
+      8,
+      25
+    ],
+    "code_id_range": [
+      4,
+      2039
+    ],
+    "delayed_shape": [
+      1,
+      8,
+      34
+    ],
+    "mask_acoustic_tokens": 200,
+    "alignment_exact": true,
+    "reconstruction_samples": 48000,
+    "reconstruction_finite": true,
+    "source_rms": 0.1024345364735443,
+    "reconstruction_rms": 0.09317129105329514,
+    "waveform_mse": 0.0037265894934535027,
+    "waveform_snr_db": 4.495812579013422,
+    "metric_note": "逐样点 SNR 未做时延校正，不等于感知音质或 ASR 准确率。",
+    "source_wav": "/Users/lucius/projects/personal/Omni++/outputs/p3/run-02/codec-source.wav",
+    "reconstruction_wav": "/Users/lucius/projects/personal/Omni++/outputs/p3/run-02/codec-reconstruction.wav",
+    "elapsed_seconds": 0.17536495788954198
+  },
+  "parity": {
+    "status": "passed",
+    "weights": {
+      "path": "/Users/lucius/projects/personal/minimind-o/out/sft_omni_768.pth",
+      "bytes": 236155558,
+      "sha256": "5a05a617858453aa9490bb0ca9e22503e51dd8718348bc06d3a549ffecb589f8"
+    },
+    "keys": 195,
+    "missing_keys": [],
+    "unexpected_keys": [],
+    "reference_missing_keys": [],
+    "reference_unexpected_keys": [],
+    "source_tied_weights_equal": true,
+    "text_logits_max_abs_diff": 2.47955322265625e-05,
+    "audio_logits_max_abs_diff": 2.86102294921875e-05,
+    "audio_logits_shape": [
+      1,
+      8,
+      8,
+      2112
+    ],
+    "cache_max_abs_diff": 2.0742416381835938e-05,
+    "rtol": 0.0001,
+    "atol": 0.0001
+  },
+  "generation": {
+    "status": "passed",
+    "prompt": "你好，请用一句话介绍春天。",
+    "rendered_prompt": "<|im_start|>user\n你好，请用一句话介绍春天。<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "text": "春天是一年中最美的季节之一，花开满园，鸟语花香，温暖的阳光和微风拂面，让人心情愉悦。",
+    "generated_ids": [
+      [
+        3102,
+        993,
+        1203,
+        936,
+        388,
+        695,
+        1279,
+        296,
+        5397,
+        2511,
+        294,
+        1884,
+        727,
+        1359,
+        2787,
+        294,
+        4971,
+        761,
+        1884,
+        2708,
+        294,
+        5304,
+        296,
+        5178,
+        334,
+        1887,
+        1018,
+        481,
+        260,
+        605,
+        294,
+        5007,
+        795,
+        856,
+        505,
+        267,
+        1816,
+        135,
+        302,
+        2
+      ]
+    ],
+    "codes_shape": [
+      1,
+      8,
+      125
+    ],
+    "code_id_range": [
+      1,
+      2046
+    ],
+    "max_new_tokens": 256,
+    "forward_steps": 134,
+    "stopped_before_budget": true,
+    "temperature": 0,
+    "audio_temperature": 0,
+    "top_k": 0,
+    "top_p": 1.0,
+    "use_cache": true,
+    "speaker_condition": false,
+    "elapsed_seconds": 1.1327969578560442,
+    "waveform_path": "/Users/lucius/projects/personal/Omni++/outputs/p3/run-02/omni-generated.wav",
+    "waveform_samples": 240000,
+    "sampling_rate": 24000,
+    "waveform_rms": 0.10413327068090439,
+    "playable_wav_readback": true,
+    "quality_note": "只验证有效 PCM 波形与声学 token 顺序，未做听评、ASR 或说话人相似度评测。"
+  }
+}

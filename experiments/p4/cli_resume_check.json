@@ -1,0 +1,81 @@
+{
+  "check_id": "p4-tiny-cli-run-resume",
+  "checked_at_utc": "2026-11-04T06:58:29.658087+00:00",
+  "status": "passed",
+  "scope": "synthetic tiny fixture; not real-data SFT, 64-sample overfit, or model quality evidence",
+  "entrypoint": "scripts/train_sft.py:run",
+  "invocation": "Imported script and called run(); ROOT redirected to an isolated /private/tmp directory; argparse subprocess not exercised here.",
+  "temporary_root": "/private/tmp/omni-p4-review-mudm4828",
+  "fixture": {
+    "train_samples": 3,
+    "validation_samples": 3,
+    "shape_cases": [
+      "text input",
+      "audio feature input",
+      "image feature input"
+    ],
+    "real_media": false,
+    "real_pretrained_weights": false,
+    "hidden_size": 16,
+    "thinker_layers": 1,
+    "talker_hidden_size": 16,
+    "talker_layers": 1,
+    "codebooks": 2,
+    "dropout": 0.1
+  },
+  "training": {
+    "accumulation_steps": 2,
+    "batch_size": 1,
+    "device": "cpu",
+    "dtype": "float32",
+    "eval_every": 1,
+    "freeze": "all",
+    "grad_clip": 1.0,
+    "learning_rate": 0.001,
+    "seed": 42,
+    "steps": 4,
+    "stop_weight": 3.0,
+    "weight_decay": 0.0
+  },
+  "branches": {
+    "interrupted": {
+      "steps": 2,
+      "checkpoint": "/private/tmp/omni-p4-review-mudm4828/outputs/p4/20261104T065624404993Z/step-2.pt"
+    },
+    "resumed": {
+      "start_step": 2,
+      "target_step": 4,
+      "checkpoint": "/private/tmp/omni-p4-review-mudm4828/outputs/p4/20261104T065638316592Z/step-4.pt"
+    },
+    "continuous": {
+      "steps": 4,
+      "checkpoint": "/private/tmp/omni-p4-review-mudm4828/outputs/p4/20261104T065638235768Z/step-4.pt"
+    }
+  },
+  "exact_equality": {
+    "model": true,
+    "optimizer": true,
+    "scaler": true,
+    "progress": true,
+    "rng": true,
+    "final_train_metrics": true
+  },
+  "checked_model_state_keys": 61,
+  "continuous_final_train": {
+    "total": 7.0461814403533936,
+    "text": 3.357310652732849,
+    "audio": 3.6888707876205444,
+    "aux": 0.0
+  },
+  "resumed_final_train": {
+    "total": 7.0461814403533936,
+    "text": 3.357310652732849,
+    "audio": 3.6888707876205444,
+    "aux": 0.0
+  },
+  "cache_sha256": {
+    "train": "07dbe53e510674cb36cd41100ac75dfc6f42433cc4e209b397ae1d8fd57ae01d",
+    "validation": "d9b328cd68e94c6ce854235e3cde0e5574f04964bc629af9e1f8df0e8a4409a2"
+  },
+  "implementation_note": "Run completed before the later cache-interface guards were added; fixture train/validation configs match and selections are unique and count-aligned."
+}

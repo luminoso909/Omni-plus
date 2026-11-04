@@ -1,0 +1,31 @@
+{
+  "checked_at_utc": "2026-11-04T06:48:58.821005+00:00",
+  "status": "official_training_data_missing",
+  "reference_root": "/Users/lucius/projects/personal/minimind-o",
+  "expected_sources": [
+    {
+      "task": "t2a",
+      "path": "/Users/lucius/projects/personal/minimind-o/dataset/sft_t2a_mini.parquet",
+      "exists": false
+    },
+    {
+      "task": "a2a",
+      "path": "/Users/lucius/projects/personal/minimind-o/dataset/sft_a2a_mini.parquet",
+      "exists": false
+    },
+    {
+      "task": "i2t",
+      "path": "/Users/lucius/projects/personal/minimind-o/dataset/sft_i2t.parquet",
+      "exists": false
+    }
+  ],
+  "available_eval_assets": {
+    "audio_mp3_count": 35,
+    "image_jpg_count": 9,
+    "rl_prompt_lines": 80
+  },
+  "training_records_prepared": 0,
+  "official_64_sample_overfit_started": false,
+  "license_status": "Code Apache-2.0 does not establish the license of external training corpora; dataset-specific metadata must be checked separately.",
+  "scope": "Inventory only. Evaluation media are not duplicated or relabeled as 64 independent official training examples."
+}
