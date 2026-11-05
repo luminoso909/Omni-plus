@@ -1,16 +1,21 @@
-## 一、Omni-plus
+## 一、OmniPlus v2.0
 
-基于 MiniMind-O 架构思路的全模态模型自主复现与研究项目。保留直观的 PyTorch 核心，优先保证可读性、正确性和权重兼容性。
+v2.0 计划以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVoice、SigLIP2 与 Mimi，训练 Projector、Fixed Bridge 和轻量 Talker。正式多模态 SFT 形成 B1 后，再从同一基线研究 Adaptive Bridge 与 Multimodal GRPO。 [项目主规划](docs/PROJECT_PLAN.md)
 
-已完成 P0/P1、P2 多模态前向、P3 Mimi 波形链路，以及 P4 本地训练工程与 64 条真实样本过拟合验收。正式全尺寸 SFT 和后续阶段仍由用户另行启动。
+| 状态 | 内容 |
+| --- | --- |
+| ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5 本地成果及独立 Qwen3-0.6B 文本基线 |
+| 🛠 正在迁移 | v2.0 的 R0 仓库审计、迁移设计与文档同步已完成。等待用户确认 R1 |
+| 🧪 待实测 | Qwen3-1.7B Backend、Qwen Omni 链路、全尺寸多模态 SFT、Adaptive Bridge 和 GRPO |
 
-### 1 当前范围
+### 1 历史验收成果（Historical validated work）
 
 - MiniMind：复用本地 Dense/MoE 权重和配套 tokenizer，验收自研 Thinker。
 - Qwen3-0.6B：收集官方未量化 HF 资产，使用官方 Transformers 实现验证文本推理；尚未接入自研 Thinker 或 Talker。
 - SenseVoice/SigLIP2、Mimi：复用本地预训练模型，已验收混合输入与现成 SFT 权重的 10 秒语音输出。
 - P4：官方 64/8 条训练/验证样本、小主干训练、损失/梯度和恢复验收通过；不代表完成全尺寸正式训练。
-- 完整数据集、正式 SFT、GRPO、Adaptive Bridge 和 Qwen3.5-0.8B 见 [项目待办](docs/项目待办.md)。
+- P5 将逐帧音频码本解码为连续 PCM，并测量 MiniMind 的 Cache 开关、首段音频延迟与分块间隔。 [P5 报告](docs/stages/P5.md)
+- R0 审计记录历史指纹与真实回归，并列出 R1 的待实施文件。 [R0 报告](docs/stages/R0.md) · [项目待办](docs/项目待办.md)
 
 验收证据见 [P0](docs/stages/P0.md)、[P1](docs/stages/P1.md) 及 [P2–P4 汇总](docs/reports/P2-P4.md)。汇总报告第二章逐项列出相比原项目的补充与修改，详细实测与限制分别记录。
 
@@ -46,8 +51,10 @@ experiments/p1/             可提交的来源、校验值和验收摘要
 使用已有本地资产运行验收：
 
 ```bash
-python scripts/check_minimind.py --variant all
-python scripts/check_qwen3.py --model-dir weights/qwen3-0.6b --output experiments/p1/qwen3.json
+mkdir -p outputs
+run_dir=$(mktemp -d "$PWD/outputs/recheck-p1.XXXXXX")
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_minimind.py --variant all --output-dir "$run_dir/minimind"
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_qwen3.py --model-dir weights/qwen3-0.6b --output "$run_dir/qwen3.json"
 ```
 
 脚本不训练模型或 tokenizer。MiniMind 直接用 `load_state_dict()` 严格加载；Qwen 使用 `AutoModelForCausalLM` 和 `AutoTokenizer`，验收时设置 `local_files_only=True`。资产缺失时明确报错，不在验收脚本里自动联网下载。来源 revision、文件 SHA-256、实际设备/精度与生成结果保存在 `experiments/p1/`。
@@ -62,7 +69,16 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_p3.py --output-dir o
 
 真实编码器、Mimi 与 SFT 权重只读引用 `../minimind-o`。上述验收使用新报告路径，重复执行不得覆盖旧结果。小样本准备/缓存、训练与恢复命令见 [P4 报告](docs/stages/P4.md)，各操作显式启动。完整数据集尚未下载。
 
-### 5 项目目录与数据约定
+### 5 流式推理
+
+```bash
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/demo_p5.py '你好，请用一句话介绍春天。' --device cpu --chunk-frames 4
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_p5.py --device cpu --chunk-frames 4
+```
+
+Demo 与基准使用已有的本地 MiniMind SFT 和 Mimi。波形留在 `outputs/p5/`，基准摘要按 run 保存到 `experiments/p5/`。运行参数、计时口径及适配接口见阶段报告。 [P5 报告](docs/stages/P5.md)
+
+### 6 项目目录与数据约定
 
 ```text
 omni/models/config.py               共享模型配置
@@ -73,15 +89,16 @@ omni/models/model_omni.py            OmniPlusOmni 联合模型
 omni/data/omni_dataset.py            Dataset 与 Collator
 omni/data/prepare.py                 独立数据划分与冻结特征缓存
 omni/inference/codec.py              Mimi 与波形 IO
+omni/inference/streaming.py          每话轮的 Mimi 流式状态与 PCM 事件
 omni/training/                      loss、训练步骤和完整状态恢复
 scripts/                            显式验收入口
 configs/                            模型、资产及后续运行配置
 experiments/                        小规模可复现摘要
 ```
 
-主模型统一为 `OmniPlusOmni`。Dataset 的 `labels/audio_labels` 已 shift 一次，与 Omni logits 对应计算 CE 时不再 shift；原始媒体通过外部编码回调接入。正式模型训练和质量评测仍需分别验收。
+现有 MiniMind 路径使用 `OmniPlusOmni`。Dataset 的 `labels/audio_labels` 已 shift 一次，外部 CE 按同位置 logits 对齐。原始媒体通过外部编码回调接入。Qwen 迁移将隔离 tokenizer、cache 和联合标签时间轴。 [文件级迁移表](docs/reports/R0-migration-map.md)
 
-### 6 致谢与许可
+### 7 致谢与许可
 
 感谢 Jingyao Gong 的 [MiniMind-O](https://github.com/jingyaogong/minimind-o)，上游代码采用 [Apache-2.0](https://github.com/jingyaogong/minimind-o/blob/master/LICENSE)。本地参考仓库保持只读；代码独立整理，参考模型仅用于对照，不代表原作者背书。
 

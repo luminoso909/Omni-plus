@@ -1,0 +1,92 @@
+{
+  "status": "passed",
+  "date": "2026-11-06",
+  "baseline_head": "f56e3aedb04f46f72ee9d9b6f93b988afa06b18f",
+  "branch": "main",
+  "initial_status": [
+    " M AGENTS.md",
+    " M README.md",
+    " M docs/项目待办.md",
+    " M omni/inference/__init__.py",
+    " M omni/models/model_omni.py",
+    " M omni/models/thinker/model_thinker.py",
+    " M tests/test_omni_generation.py",
+    "?? docs/OmniPlus_v2.0_最终重构与开发执行规划.md",
+    "?? docs/stages/P5.md",
+    "?? experiments/p5/cpu-fp32-20261105.json",
+    "?? omni/inference/streaming.py",
+    "?? scripts/check_p5.py",
+    "?? scripts/demo_p5.py",
+    "?? test.ipynb",
+    "?? tests/test_streaming.py"
+  ],
+  "checked_files": 243,
+  "checked_bytes": 4166603564,
+  "history_reports": [
+    {
+      "path": "docs/stages/P0.md",
+      "bytes": 4479,
+      "sha256": "01ac1cb1d4bad5c2d938fc5ad60f06d68ec49e11060e01442f38e0d31fcd993f"
+    },
+    {
+      "path": "docs/stages/P1.md",
+      "bytes": 6906,
+      "sha256": "ecb9052d9162d77d632210c2d5bf18c7ff5b52fcda5fe8a70a6be6df51757473"
+    },
+    {
+      "path": "docs/stages/P2.md",
+      "bytes": 6381,
+      "sha256": "b1345c087866ad07026c33f0506d82d5a633e8c3ffb33e1eeb8dbe393cbe04b3"
+    },
+    {
+      "path": "docs/stages/P3.md",
+      "bytes": 6662,
+      "sha256": "14ed2a69dd9340f4373ce35b02f750d7fd372cad5dfeedb9777de46aebcf811a"
+    },
+    {
+      "path": "docs/stages/P4.md",
+      "bytes": 11189,
+      "sha256": "37b80cf84f4c512ab916cc43a03ae2e761e98a8fa6aabdd3c865ebb01df9040f"
+    },
+    {
+      "path": "docs/stages/P5.md",
+      "bytes": 8124,
+      "sha256": "302dd9b5ba88afc4ed21079af94777b2960052c2b9aa3ce6992c6dc4196537ed"
+    }
+  ],
+  "v1_archive_sha256": "2a119899b09a5ce157a27e2abf479cab431b84d83ca791b5d6ba1d463144c40a",
+  "v2_plan_sha256": "ad9d9ec9ebbd63af927f0466c078eeff57d62b61942beae33b00d1730222084c",
+  "qwen3_0_6b_files_matching_historical_manifest": 10,
+  "p4_checkpoint_step": 600,
+  "p4_cache_hashes_match": true,
+  "r0_pytest_passed": 151,
+  "ruff_formatted_files": 45,
+  "wheel_files": 26,
+  "local_evidence": "outputs/r0/audit-20261106",
+  "minimind": {
+    "dense": {
+      "status": "passed",
+      "state_dict_keys": 91,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "device": "cpu",
+      "dtype": "float32",
+      "rtol": 0.0001,
+      "atol": 0.0001,
+      "hf_roundtrip_max_abs_diff": 0.0,
+      "logits_max_abs_diff": 4.57763671875e-05
+    },
+    "moe": {
+      "status": "passed",
+      "state_dict_keys": 171,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "device": "cpu",
+      "dtype": "float32",
+      "rtol": 0.0001,
+      "atol": 0.0001,
+      "hf_roundtrip_max_abs_diff": 0.0,
+      "logits_max_abs_diff": 3.147125244140625e-05
+    }
+  }
+}
