@@ -4,9 +4,9 @@ v2.0 计划以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 Sense
 
 | 状态 | 内容 |
 | --- | --- |
-| ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5 本地成果及独立 Qwen3-0.6B 文本基线 |
-| 🛠 正在迁移 | v2.0 的 R0 仓库审计、迁移设计与文档同步已完成。等待用户确认 R1 |
-| 🧪 待实测 | Qwen3-1.7B Backend、Qwen Omni 链路、全尺寸多模态 SFT、Adaptive Bridge 和 GRPO |
+| ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5、独立 Qwen3-0.6B 文本基线、R0 仓库审计、R1 Qwen3-1.7B 文本 Backend |
+| 🛠 正在迁移 | R1 已确定 Thinker 接口与 Cache 契约。R2 多模态组合等待用户授权 |
+| 🧪 待实测 | Qwen Omni 链路、全尺寸多模态 SFT、Adaptive Bridge 和 GRPO |
 
 ### 1 历史验收成果（Historical validated work）
 
@@ -37,15 +37,17 @@ python -m pip check
 
 `pip install -e '.[dev]'` 仍支持最小文本环境；运行全部测试加装 `media,plots`。真实编码器验收另需 `encoders`，官方小样本收集另需 `data`。FunASR 带有较多间接依赖，单独放在可选组，不强加给基础文本环境。
 
-### 3 两套文本资产与真实验收
+### 3 文本资产与真实验收
 
-路径说明见 `configs/assets.yaml`，所有相对路径从项目根目录解析。二进制权重、tokenizer 目录和缓存均不提交 Git。
+历史路径见 `configs/assets.yaml`，R1 固定版本见 `configs/assets_v2.yaml`。所有相对路径从项目根目录解析。二进制权重、tokenizer 目录和缓存均不提交 Git。
 
 ```text
 weights/minimind/           本地 llm_768.pth、llm_768_moe.pth
 tokenizers/minimind/       MiniMind tokenizer.json、tokenizer_config.json
 weights/qwen3-0.6b/         官方完整 HF 目录（包含权重、配置与 tokenizer）
+weights/qwen3-1.7b/         官方非 Base 权重、配置与 tokenizer
 experiments/p1/             可提交的来源、校验值和验收摘要
+experiments/r1/             1.7B Backend 离线验收摘要
 ```
 
 使用已有本地资产运行验收：
@@ -58,6 +60,15 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_qwen3.py --model-dir
 ```
 
 脚本不训练模型或 tokenizer。MiniMind 直接用 `load_state_dict()` 严格加载；Qwen 使用 `AutoModelForCausalLM` 和 `AutoTokenizer`，验收时设置 `local_files_only=True`。资产缺失时明确报错，不在验收脚本里自动联网下载。来源 revision、文件 SHA-256、实际设备/精度与生成结果保存在 `experiments/p1/`。
+
+R1 使用官方 `Qwen3ForCausalLM` 验证独立 Backend。已有固定版本资产时，用一个新的结果目录运行。
+
+```bash
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_qwen_backend.py \
+  --device cpu --output-dir experiments/r1/recheck-01
+```
+
+1.7B 已通过 CPU FP32 原生对照、左 padding、KV prefill/decode、Cache 重置及中英文贪心烟测。下载命令、选层契约和实测误差见阶段报告。 [R1 报告](docs/stages/R1.md)
 
 ### 4 多模态验收与小样本训练
 
@@ -83,6 +94,7 @@ Demo 与基准使用已有的本地 MiniMind SFT 和 Mimi。波形留在 `output
 ```text
 omni/models/config.py               共享模型配置
 omni/models/thinker/model_thinker.py Thinker 与 CausalLM
+omni/models/thinker/qwen_backend.py   官方 Qwen Thinker Adapter
 omni/models/encoders/                冻结编码器与模态投影
 omni/models/talker/                  音频码本与 Talker
 omni/models/model_omni.py            OmniPlusOmni 联合模型
@@ -102,6 +114,6 @@ experiments/                        小规模可复现摘要
 
 感谢 Jingyao Gong 的 [MiniMind-O](https://github.com/jingyaogong/minimind-o)，上游代码采用 [Apache-2.0](https://github.com/jingyaogong/minimind-o/blob/master/LICENSE)。本地参考仓库保持只读；代码独立整理，参考模型仅用于对照，不代表原作者背书。
 
-Qwen3 资产来自 [Qwen/Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B)，保留其官方许可证与出处。本项目自身许可证尚未指定；外部模型、tokenizer 和数据的许可分别记录，不将代码许可证直接套用于所有资产。
+Qwen3 资产保留官方许可证与出处。外部模型、tokenizer 和数据的许可分别记录。本项目自身许可证尚未指定。 [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) · [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)
 
 本地 Mimi 转换资产采用 CC-BY-4.0。官方数据卡声明 Apache-2.0 与 GPL-3.0，未逐文件区分；本轮子集仅本地使用，不公开再分发。

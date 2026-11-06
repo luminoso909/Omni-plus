@@ -1,0 +1,12 @@
+schema_version: 1
+asset: qwen3_1_7b
+
+# R1 的 CPU 参考口径，运行前固定。R2 的 Bridge 层与训练精度另行决定。
+validation:
+  device: cpu
+  dtype: float32
+  rtol: 0.0001
+  atol: 0.0001
+  seed: 42
+  max_new_tokens: 12
+  enable_thinking: false
