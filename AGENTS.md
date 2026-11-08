@@ -1,6 +1,6 @@
 ## 一、阶段与分工
 
-1. P0–P5 为只读历史。v2.1 按 `docs/PROJECT_PLAN.md` 与 `docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md` 推进，每次只执行用户授权的一个阶段。R5-L 已完成本地代码与 Tiny 验收，等待独立审查。R6-L 另行授权。G3、G4、G5/G6、G7 各自记录云端实测与正式验收。
+1. P0–P5 为只读历史。v2.1 按 `docs/PROJECT_PLAN.md` 与 `docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md` 推进，每次只执行用户授权的一个阶段。R5-L 最终修复与本地验收 PASS，证据见 `docs/reviews/R5-L_FINAL_FIX_REPORT.md`。R6-L 另行授权。G3、G4、G5/G6、G7 各自记录云端实测与正式验收。
 2. 每阶段由用户学习并实现核心算法。Codex 主要负责工程设施、测试、调试与文档辅助。
 3. 未经用户明确要求，不得直接实现或大规模改写模型核心代码，包括 Thinker、Talker、Bridge、Projector、SFT、GRPO、KV Cache 和流式推理。
 4. 不预生成空模型类；按实际需要逐步创建模块。

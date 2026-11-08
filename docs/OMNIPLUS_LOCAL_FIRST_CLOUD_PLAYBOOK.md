@@ -3,7 +3,7 @@
 > **文档性质**：对 `docs/PROJECT_PLAN.md`（v2.0）的**执行顺序补充**，不是推翻模型架构与研究目标。  
 > **使用对象**：本人 + Codex；先本地实现、极小样本验证所有训练/评测模块，再在云端按顺序启动真实训练与研究实验。  
 > **状态更新（2026-11-08）**：R5-L 本地代码与 Tiny 验收已完成。 [R5-L 报告](stages/R5-local.md) · [G5 操作说明](cloud/G5_BRIDGE_RUNBOOK.md)
-> **下一步**：R5-L 独立审查。G5 正式消融须先有 B1。
+> **下一步**：R5-L 最终修复验收 PASS，等待用户授权 R6-L。G5 正式消融须先有 B1。 [最终修复报告](reviews/R5-L_FINAL_FIX_REPORT.md)
 
 ---
 
@@ -415,4 +415,4 @@ R5 与 R6 以**同一个冻结 B1**为研究起点，可以分别执行；两者
 - Hugging Face PEFT/LoRA 集成：<https://huggingface.co/docs/transformers/peft>
 - 本项目现有历史事实与正式研究边界：`docs/PROJECT_PLAN.md`、`docs/stages/P0.md`–`P5.md`、`docs/stages/R0.md`、`R1.md`（以实际仓库为准）。
 
-**当前下一步为 R5-L 独立审查。R6-L 和云端各阶段分别授权。**
+**R5-L 最终修复与本地验收已通过。当前停在 R6-L 入口，R6-L 和云端各阶段分别授权。**

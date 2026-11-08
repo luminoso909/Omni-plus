@@ -5,7 +5,8 @@ import pytest
 import torch
 
 from omni.data.bridge_splits import check_bridge_splits
-from omni.data.r3_prepare import file_hash
+from omni.data.prepare import content_hash
+from omni.data.r3_prepare import file_hash, group_records
 
 
 def record(name: str, split: str, *identities: str, task: str = "t2a") -> dict:
@@ -13,7 +14,15 @@ def record(name: str, split: str, *identities: str, task: str = "t2a") -> dict:
 
 
 def audited(*rows: dict) -> dict:
-    return dict(kind="audited_raw_media", records=list(rows))
+    grouped = group_records(list(rows), {row["record_id"]: row["split"] for row in rows})
+    groups = {}
+    for row in grouped:
+        groups.setdefault(row["group_id"], set()).update(row["media_ids"])
+    return dict(
+        kind="audited_raw_media",
+        records=grouped,
+        identity_groups={group: sorted(members) for group, members in groups.items()},
+    )
 
 
 @pytest.mark.parametrize(
@@ -128,3 +137,52 @@ def test_formal_requires_complete_audited_provenance(tmp_path):
 
     # Existing local Tiny diagnostics may still use their historical cache contract.
     check_bridge_splits({}, {}, "b1", None, formal=False)
+
+
+@pytest.mark.parametrize("side", ["source", "target", "ancestor"])
+@pytest.mark.parametrize("defect", ["missing", "empty", "truncated", "row_outside", "unsorted"])
+def test_formal_rejects_incomplete_group_inventory(tmp_path, side, defect):
+    contracts = {
+        name: audited(record(name, split, "id:" + name, "sha256:" + name))
+        for name, split in (("source", "train"), ("target", "test"), ("ancestor", "train"))
+    }
+    broken = contracts[side]
+    row = broken["records"][0]
+    group = row["group_id"]
+    if defect == "missing":
+        del broken["identity_groups"]
+    elif defect == "empty":
+        broken["identity_groups"].clear()
+    elif defect == "truncated":
+        broken["identity_groups"][group].pop()
+    elif defect == "row_outside":
+        row["media_ids"].append("sha256:unbound")
+    else:
+        broken["identity_groups"][group].reverse()
+
+    parent_cache, parent = tmp_path / "parent.json", tmp_path / "parent.pt"
+    parent_identity = write_cache(parent_cache, contracts["ancestor"])
+    torch.save(dict(progress=dict(identity=parent_identity)), parent)
+    parent_sha = file_hash(parent)
+    cache = tmp_path / "source.json"
+    identity = write_cache(cache, contracts["source"], components_checkpoint=parent_sha)
+    lineage = tmp_path / "lineage.json"
+    lineage.write_text(
+        json.dumps(
+            {
+                "b1": dict(cache_manifest=cache.name),
+                parent_sha: dict(checkpoint=parent.name, cache_manifest=parent_cache.name),
+            }
+        )
+    )
+    with pytest.raises(ValueError, match="完整媒体组身份"):
+        check_bridge_splits(contracts["target"], identity, "b1", lineage, formal=True)
+
+
+def test_new_inventory_is_validated_in_tiny_mode():
+    contract = audited(record("tiny", "train", "id:tiny"))
+    group = contract["records"][0]["group_id"]
+    assert group == content_hash(contract["identity_groups"][group])
+    contract["identity_groups"][group].append("id:unbound")
+    with pytest.raises(ValueError, match="完整媒体组身份"):
+        check_bridge_splits(contract, {}, "b1", None, formal=False)

@@ -1,9 +1,10 @@
 """绑定训练、恢复及评测实际使用的项目源码。"""
 
 import hashlib
+import sys
 from pathlib import Path
 
-SOURCE_SCHEMA_VERSION = 2
+SOURCE_SCHEMA_VERSION = 3
 CLI_FILES = ("scripts/run_experiment.py", "scripts/bridge_ablation.py")
 
 
@@ -16,8 +17,31 @@ def _raise_scan_error(error: OSError) -> None:
     raise error
 
 
+def check_source_root(root: Path) -> None:
+    """拒绝从其他 checkout 导入源码，包括包搜索路径及已加载子模块。"""
+    root = root.resolve()
+    for name, module in tuple(sys.modules.items()):
+        if name != "omni" and not name.startswith("omni."):
+            continue
+        location = root.joinpath(*name.split("."))
+        package_paths = getattr(module, "__path__", None)
+        expected = (
+            location / "__init__.py" if package_paths is not None else location.with_suffix(".py")
+        )
+        origins = (
+            getattr(module, "__file__", None),
+            getattr(getattr(module, "__spec__", None), "origin", None),
+        )
+        if any(not isinstance(path, str) or Path(path).resolve() != expected for path in origins):
+            raise ValueError(f"执行源码与记录根目录不一致：{name}，需要 {expected}，实际 {origins}")
+        if package_paths is not None and [Path(path).resolve() for path in package_paths] != [
+            location
+        ]:
+            raise ValueError(f"执行源码包搜索路径不一致：{name}，需要 {location}")
+
+
 def source_identity(root: Path) -> dict:
-    """按相对路径和实际文件字节固定执行源码，支持无 Git 元数据的归档。"""
+    """静态摘要可用于归档比较；执行入口先用 check_source_root 核对实际导入。"""
     root = root.resolve()
     package = root / "omni"
     if package.is_symlink():

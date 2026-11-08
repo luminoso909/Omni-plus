@@ -1,14 +1,16 @@
 """R5 源码身份覆盖实际执行路径，恢复和评测拒绝变化。"""
 
+import json
+import os
 import shutil
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import pytest
-import torch
 from test_r4_training import settings
 
-from omni.data import r3_prepare
-from omni.training import r3_local
 from omni.training.run_source import CLI_FILES, SOURCE_SCHEMA_VERSION, source_identity
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,7 +52,7 @@ def test_source_identity_tracks_code_and_is_independent_of_checkout_path(archive
     ("omni/models/model_omni.py", "omni/data/omni_dataset.py", "omni/models/config.py"),
 )
 def test_source_change_rejects_resume_and_evaluate_before_model_load(
-    archive: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, filename: str
+    archive: Path, tmp_path: Path, filename: str
 ) -> None:
     cache = tmp_path / "cache"
     cache.mkdir()
@@ -60,22 +62,42 @@ def test_source_change_rejects_resume_and_evaluate_before_model_load(
     config["model"]["bridge"] = {"kind": "fixed", "layers": [0]}
     config["training"].update(tasks=["t2a"], steps=2)
     config["evaluation"]["benchmark"] = {"split": "validation", "t2a_samples": 1}
-    original = r3_local.run_identity(config, archive)
-    checkpoint = tmp_path / "step-000001.pt"
-    torch.save({"progress": {"identity": original, "step": 1}}, checkpoint)
+    # 新进程从归档实际导入源码，静态指纹与运行来源同时受检。
+    program = textwrap.dedent(
+        r"""
+        import json, sys
+        from pathlib import Path
+        import pytest
+        import torch
+        from omni.data import r3_prepare
+        from omni.training import r3_local
 
-    path = archive / filename
-    path.write_text(path.read_text() + "\nprobe = True\n")
-    changed = r3_local.run_identity(config, archive)
-    assert changed["source_sha256"][filename] != original["source_sha256"][filename]
+        root, config, filename = Path(sys.argv[1]), json.loads(sys.argv[2]), sys.argv[3]
+        assert Path(r3_local.__file__).resolve().is_relative_to(root)
+        original = r3_local.run_identity(config, root)
+        checkpoint = root / "step-000001.pt"
+        torch.save({"progress": {"identity": original, "step": 1}}, checkpoint)
+        path = root / filename
+        path.write_text(path.read_text() + "\nprobe = True\n")
+        changed = r3_local.run_identity(config, root)
+        assert changed["source_sha256"][filename] != original["source_sha256"][filename]
 
-    monkeypatch.setattr(r3_local, "data_contract", lambda *args: {})
-    monkeypatch.setattr(r3_prepare, "load_prepared", lambda *args: [])
-    monkeypatch.setattr(r3_local, "build_model", lambda *args: pytest.fail("加载了模型"))
-    resume = tmp_path / "resume"
-    evaluation = tmp_path / "evaluation"
-    with pytest.raises(ValueError, match="Resume 配置"):
-        r3_local.smoke(config, archive, resume, resume=checkpoint)
-    with pytest.raises(ValueError, match="评估配置"):
-        r3_local.evaluate_run(config, archive, evaluation, checkpoint)
-    assert not resume.exists() and not evaluation.exists()
+        r3_local.data_contract = lambda *args: {}
+        r3_prepare.load_prepared = lambda *args: []
+        r3_local.build_model = lambda *args: pytest.fail("加载了模型")
+        resume, evaluation = root / "resume", root / "evaluation"
+        with pytest.raises(ValueError, match="Resume 配置"):
+            r3_local.smoke(config, root, resume, resume=checkpoint)
+        with pytest.raises(ValueError, match="评估配置"):
+            r3_local.evaluate_run(config, root, evaluation, checkpoint)
+        assert not resume.exists() and not evaluation.exists()
+        """
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program, str(archive), json.dumps(config), filename],
+        cwd=tmp_path,
+        env=os.environ | {"PYTHONPATH": str(archive), "PYTHONDONTWRITEBYTECODE": "1"},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

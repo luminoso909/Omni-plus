@@ -2,7 +2,7 @@
 
 > **文档类型**：项目主规划。下文保留 v2.0 的架构、研究设计和验收标准，执行顺序见 v2.1 执行附录。<br>
 > **版本 / 日期**：v2.1 / 2026-11-08<br>
-> **状态**：R5-L 本地代码与 Tiny 验收已完成，等待独立审查。G3 与正式训练尚未执行。<br>
+> **状态**：R5-L 最终修复与本地验收 PASS，两个 P1 已关闭，P2 保持通过。R6-L 待授权，G3 与正式训练尚未执行。 [最终报告](reviews/R5-L_FINAL_FIX_REPORT.md)<br>
 > **研究定位**：**以 Qwen3-1.7B 为主 Thinker，自主构建并训练轻量级 Thinker–Bridge–Talker Omni 模型；在可靠的多模态 SFT Baseline 上研究 Adaptive Bridge 与 Multimodal GRPO。**  
 > **最重要的要求**：**继承 P0–P5、最小改造、阶段验收、严格归因、历史只读。**
 
@@ -695,6 +695,7 @@ R3 的数据与单卡真实 Profile 通过；用户确认训练预算、数据�
 - [x] Fixed、Last、Weighted、Gated 的选层、数学、梯度、Cache 与 Streaming 回归。
 - [x] 复用 SFT、共同 Fixed 权重初始化、严格恢复、独立矩阵与留出集评测导出。
 - [x] [本地报告](stages/R5-local.md)与 [G5 操作说明](cloud/G5_BRIDGE_RUNBOOK.md)。
+- [x] 最终修复验收。完整媒体组身份保护 B1→G5 隔离，实际导入来源与源码指纹一致，全仓回归与成本汇总通过。
 - [ ] G5 以验收后的 B1 执行正式受控实验并汇总效果与成本。
 
 ### 前置条件

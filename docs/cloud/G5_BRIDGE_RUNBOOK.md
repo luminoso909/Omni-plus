@@ -12,7 +12,7 @@ R5-L 提供 Fixed、Last、Weighted、Gated 的本地实现和实验入口。G5 
 
 ## 二、固定代码与环境
 
-将包含 [审查修复](../reviews/R5-L_REVIEW_FIXES.md) 的提交 SHA 填入 `R5_COMMIT`。若远程尚未包含该提交，先由仓库负责人发布对应提交或搬运 Git bundle。
+将包含 [最终修复验收](../reviews/R5-L_FINAL_FIX_REPORT.md) 的提交 SHA 填入 `R5_COMMIT`。若远程尚未包含该提交，先由仓库负责人发布对应提交或搬运 Git bundle。
 
 ```bash
 git clone https://github.com/luminoso909/Omni-plus.git
@@ -27,6 +27,8 @@ nvidia-smi
 ```
 
 使用与云主机驱动匹配的 Linux CUDA PyTorch 和 Torchaudio，并把安装指令、`pip freeze` 与 `nvidia-smi` 输出存入运行目录旁。 [PyTorch 官方安装说明](https://pytorch.org/get-started/locally/)
+
+两个 CLI 会在读取配置前校验实际导入的 `omni` 包、已加载子模块和包搜索路径。复用另一 checkout 的 editable 环境会被拒绝。请在当前 checkout 安装环境，或显式将 `PYTHONPATH` 指向当前完整源码根。工作目录和 Git SHA 不能代替实际导入来源检查。
 
 ## 三、准备 B1 与实验数据
 
@@ -47,6 +49,8 @@ nvidia-smi
 ```
 
 `plan` 和热启动都依据 Checkpoint 内的摘要核对清单，并按已记录的媒体 ID、内容摘要、文本身份与分组检查 split。B1 训练数据必须留在 G5 训练侧，B1 验证数据不得进入 G5 Test，封存 Test 保持原角色。正式矩阵要求所有来源具有审计数据契约，缺少继承证据时须找回对应原始清单及 Checkpoint。
+
+正式数据使用审计契约 v3。`identity_groups` 保存每个选中组在完整审计 JSONL 中的全部身份，包含预算未选中和跨任务的别名。来源、目标及继承组件均须具有该证据，集合摘要必须与 `group_id` 一致。旧缓存只有选中记录和组摘要时不能认证独立留出集。不要回填或重签旧缓存、Checkpoint 和 Manifest。B1 正式训练前以新目录准备 v3 缓存，确保新 Checkpoint 从开始就绑定完整证据。旧训练恢复在原提交执行。
 
 在 `outputs/g5/configs/base.yaml` 创建派生配置。以下路径和摘要为待填值。任务、训练预算和 B1 的 LoRA 配置由 G3/G4 实测确定。
 
@@ -95,7 +99,7 @@ python scripts/run_experiment.py train --config "$CFG" --run-dir "$RUN/train" > 
 python scripts/run_experiment.py resume --config "$CFG" --resume "$RUN/train/step-000004.pt" --steps 10 --run-dir "$RUN/resumed" > "$RUN/resume.log" 2>&1
 ```
 
-Checkpoint 身份校验覆盖 `omni` Python 源码、两个实验 CLI、运行时、配置、数据及初始化文件哈希。历史 Checkpoint 的严格恢复在原提交执行。若版本或设备变化，保留失败记录并从获批的共同 B1 开启新矩阵。定期将权重、日志、配置和清单备份到私有持久卷，使用文件校验确认回传完整。
+Checkpoint 的源码身份 v3 覆盖实际导入根校验、`omni` Python 源码、两个实验 CLI、运行时、配置、数据及初始化文件哈希。历史 Checkpoint 的严格恢复在原提交执行。若版本或设备变化，保留失败记录并从获批的共同 B1 开启新矩阵。定期将权重、日志、配置和清单备份到私有持久卷，使用文件校验确认回传完整。
 
 ## 五、统一 Benchmark 与导出
 
@@ -109,3 +113,5 @@ python scripts/bridge_ablation.py collect --matrix "$MATRIX/matrix.json" --outpu
 对恢复后的运行，在 `collect --artifacts` 的 JSON 中显式指定对应训练目录、评测目录和失败日志。保留缺失或失败行并按原因复核。检查候选对照使用相同的 B1 文件 SHA、资产、数据、种子、有效步数、评测集和硬件。记录新增参数和显存/延迟成本，单独保留各 run 的原始 JSON/CSV、训练曲线和失败样本。仅汇总指标与报告进入 Git，原始语音和 Checkpoint 保留于私有目录。
 
 汇总的 `training_*` 记录优化器循环耗时、训练峰值和实际覆盖的 step 区间。恢复运行只计本段成本。`inference_*` 单独记录模型流延迟与推理峰值。历史 Tiny 矩阵可汇总为诊断，正式比较使用新版本矩阵。
+
+矩阵容器仍为 v2，内部 `source_schema_version` 须为 3。旧源码身份 v2 的矩阵在当前 `collect` 中被拒绝，不能沿用旧认证绕过最终修复。历史 v1 Tiny 矩阵继续仅作诊断。已保存的旧矩阵和结果保持不变，需要历史复现时使用对应原提交。

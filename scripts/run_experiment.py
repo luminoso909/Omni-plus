@@ -15,11 +15,14 @@ from omni.training.r3_local import (
     read_settings,
     smoke,
 )
+from omni.training.run_source import check_source_root
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
+    check_source_root(ROOT)
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",

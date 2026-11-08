@@ -21,7 +21,7 @@ from omni.models.bridge import bridge_spec
 from omni.models.config import OmniPlusConfig
 from omni.models.model_omni_v2 import OmniPlusOmni
 from omni.models.thinker.qwen_backend import QwenBackend
-from omni.training.run_source import digest, source_identity
+from omni.training.run_source import check_source_root, digest, source_identity
 from omni.training.sft import load_checkpoint, save_checkpoint, train_step
 
 
@@ -580,6 +580,8 @@ def optimizer_state(model: nn.Module, settings: dict) -> tuple:
 
 
 def run_identity(settings: dict, root: Path) -> dict:
+    check_source_root(root)
+
     bridge_identity = {}
     if "bridge" in settings["model"] or settings["model"].get("initialization", {}).get(
         "bridge_base_checkpoint"

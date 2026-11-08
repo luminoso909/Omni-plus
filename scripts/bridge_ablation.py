@@ -17,7 +17,7 @@ from omni.training.r3_local import (
     read_settings,
     run_identity,
 )
-from omni.training.run_source import SOURCE_SCHEMA_VERSION
+from omni.training.run_source import SOURCE_SCHEMA_VERSION, check_source_root
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FIELDS = ("source_schema_version", "source_sha256", "runtime")
@@ -317,6 +317,8 @@ def collect(matrix_path: Path, output: Path, overrides: dict | None = None) -> d
 
 
 def main() -> None:
+    check_source_root(ROOT)
+
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     prepare = commands.add_parser("plan", help="锁定共同配置并生成独立候选 YAML")

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import torch
 
+from omni.data.prepare import content_hash
 from omni.data.r3_prepare import SPLITS, file_hash, group_records
 
 
@@ -82,6 +83,9 @@ def check_bridge_splits(
             raise ValueError("正式 G5 的 B1 来源与目标需要包含 split 身份的审计数据契约。")
         if rows is None:
             continue  # 历史 Tiny 诊断只检查已有身份。
+        identities = contract.get("identity_groups")
+        if (formal or identities is not None) and not isinstance(identities, dict):
+            raise ValueError("正式 G5 缺少完整媒体组身份，请从原始审计清单另建缓存。")
         for row in rows:
             split, group, media = row.get("split"), row.get("group_id"), row.get("media_ids")
             if (
@@ -93,6 +97,21 @@ def check_bridge_splits(
                 or any(not isinstance(item, str) or not item for item in media)
             ):
                 raise ValueError("G5 数据身份缺少有效的 split、group_id 或 media_ids。")
+
+            # group_id 绑定完整集合，不能只比较选中行或不可逆的组摘要。
+            if identities is not None:
+                members = identities.get(group)
+                if (
+                    not isinstance(members, list)
+                    or not members
+                    or any(not isinstance(item, str) or not item for item in members)
+                    or members != sorted(set(members))
+                    or content_hash(members) != group
+                    or not set(media) <= set(members)
+                ):
+                    raise ValueError("G5 完整媒体组身份缺失或与 group_id、media_ids 不一致。")
+                media = members
+
             records.append(dict(record_id=len(roles), media_ids=[*media, "group:" + group]))
             roles.append((is_target, split, row.get("record_id")))
 

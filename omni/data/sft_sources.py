@@ -109,6 +109,12 @@ def inspect_sources(settings: dict, root: Path) -> dict:
         for row in select_records([row for row in rows if row["task"] == task], count, data["seed"])
     ]
 
+    # 在预算选样前保留整组身份，包括未选中行的转码副本和跨任务别名。
+    groups = {row["group_id"]: set() for row in chosen}
+    for row in rows:
+        if row["group_id"] in groups:
+            groups[row["group_id"]].update(row["media_ids"])
+
     # 复用 R1/R2 固定的模型资产身份，不接受任意同名目录。
     r2 = json.loads((root / "experiments/r2/20261108-cpu-fp32/manifest.json").read_text())
     lock = yaml.safe_load((root / "configs/assets_v2.yaml").read_text())["assets"]["qwen3_1_7b"]
@@ -133,7 +139,7 @@ def inspect_sources(settings: dict, root: Path) -> dict:
             ):
                 files[f"{name}/{path.name}"] = file_hash(path)
     return dict(
-        schema_version=2,
+        schema_version=3,
         kind="audited_raw_media",
         tasks=tasks,
         seed=data["seed"],
@@ -143,6 +149,7 @@ def inspect_sources(settings: dict, root: Path) -> dict:
         assets=files,
         manifest_sha256=data["audited_manifest_sha256"],
         records=chosen,
+        identity_groups={group: sorted(identities) for group, identities in groups.items()},
         processors={
             name: importlib.metadata.version(name)
             for name in ("transformers", "funasr", "torch", "scipy", "soundfile", "pillow")
