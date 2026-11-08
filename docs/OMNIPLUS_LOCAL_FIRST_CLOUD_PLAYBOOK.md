@@ -2,8 +2,8 @@
 
 > **文档性质**：对 `docs/PROJECT_PLAN.md`（v2.0）的**执行顺序补充**，不是推翻模型架构与研究目标。  
 > **使用对象**：本人 + Codex；先本地实现、极小样本验证所有训练/评测模块，再在云端按顺序启动真实训练与研究实验。  
-> **状态更新（2026-11-08）**：R2 架构与 R3-L 本地数据/训练准备已验收；下文保留规划命令，实际可用入口以 [R3-L 报告](stages/R3-local.md) 和 [G3 操作说明](G3_CLOUD_RUNBOOK.md) 为准。云端各阶段尚未执行。
-> **下一阶段**：R4-L 等待用户授权。
+> **状态更新（2026-11-08）**：R4-L 本地代码与 Tiny 验收已完成，实际入口以 [R4-L 报告](stages/R4-local.md) 和 [G4 操作说明](cloud/G4_SFT_RUNBOOK.md) 为准。云端各阶段尚未执行，B1 未成立。
+> **下一阶段**：R5-L 等待用户授权；正式消融仍须先有 B1。
 
 ---
 
@@ -59,7 +59,7 @@
 
 ## 2. 需要 Codex 提供的稳定 CLI 契约（**待实现，并非当前仓库已存在**）
 
-2026-11-08 已落实 `scripts/run_experiment.py inspect/prepare/smoke --config ...`、`--dry-run` 和 `smoke --resume`。参数统计为 meta 模型；恢复写新 run，保留原记录。下文 `train/resume/evaluate/profile/export` 独立命令仍是后续设计，不能直接当作已实现入口。真实本地复现命令见 [R3-L 报告](stages/R3-local.md)。
+2026-11-08 已落实 `scripts/run_experiment.py inspect/prepare/smoke/train/resume/evaluate/demo/profile --config ...`。当前使用 `--run-dir`、`--resume CHECKPOINT`、`--steps`、`--dry-run`；设备、样本预算在 YAML 设置。参数统计为 meta 模型；恢复写新 run。Adapter 随运行导出并有严格加载 API，没有单独 `export` 子命令。下方旧示例的 `--run-id/--checkpoint/--device` 等不是当前参数，勿直接复制；真实可执行命令见 [R4-L 报告](stages/R4-local.md)。
 
 先审计并尽量复用已有 `scripts/train_sft.py`、`scripts/prepare_p4.py`、`omni/training/`、`omni/inference/`。**推荐新增一层薄 CLI 包装**，而不是重写模型/训练器。最终命令名称应由 Codex 实施并写入 README 和每阶段报告；以下是要求落实的**目标接口**，执行前必须在真实仓库中通过 `--help` 和 smoke 证明它们存在。
 

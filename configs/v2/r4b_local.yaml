@@ -1,0 +1,6 @@
+# R4-B：同一 T2A 训练器，验收验证/早停/最佳状态；生成使用 demo 命令。
+extends: r4a_local.yaml
+training:
+  recipe: r4b
+  patience: 3
+  min_delta: 0.001

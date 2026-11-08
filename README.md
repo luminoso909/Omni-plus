@@ -7,7 +7,8 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 | ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5、独立 Qwen3-0.6B 文本基线、R0 仓库审计、R1 Qwen3-1.7B 文本 Backend |
 | ✅ 已验收（Qwen Omni 架构） | R2 真实资产离线 Smoke：音文对齐、梯度、Cache 与 PCM 分块通过；尚未训练新 Talker |
 | ✅ 已验收（本地训练工程） | R3-L：四任务各 8 条诊断样本、版本化缓存、tiny 参数更新及新进程完整恢复 |
-| 🧪 待实测 | 本地 R4-L–R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
+| ✅ 已验收（本地 SFT 实现） | R4-L：T2A、独立 Projector、联合 LoRA、验证/生成与完整恢复；222 项回归通过 |
+| 🧪 待实测 | 本地 R5-L–R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
@@ -103,7 +104,19 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --config configs/v2/r3_local.yaml --steps 4 --resume outputs/r3-local/recheck-part/step-000002.pt --run-dir outputs/r3-local/recheck-resumed
 ```
 
-每次 smoke 使用新目录。`prepare` 只在完整版本契约相同时复用缓存；未知版本的旧回答声码被隔离，真实语音经锁定 Mimi 重编码。当前 A2A 为复述诊断，正式问答数据仍需目标音频溯源。`inspect` 使用 meta 参数统计；tiny 更新与原生 1.7B CUDA 训练分别验收。`train/resume/evaluate/profile` 独立子命令留待后续实现。 [R3-L 报告](docs/stages/R3-local.md) · [G3 云端说明](docs/G3_CLOUD_RUNBOOK.md)
+每次运行使用新目录。`prepare` 只在完整版本契约相同时复用缓存；未知版本的旧回答声码被隔离，真实语音经锁定 Mimi 重编码。当前 A2A 为复述诊断，正式问答数据仍需目标音频溯源。`inspect` 使用 meta 参数统计；tiny 更新与原生 1.7B CUDA 训练分别验收。 [R3-L 报告](docs/stages/R3-local.md) · [G3 云端说明](docs/G3_CLOUD_RUNBOOK.md)
+
+R4-L 直接扩展上述入口，新增 `train/resume/evaluate/demo/profile`；本地配置对应 A、B、C-Vision、C-Audio、D。以下只使用已有有限缓存与随机 Tiny 模型：
+
+```bash
+python scripts/run_experiment.py train --config configs/v2/r4a_local.yaml --dry-run
+python scripts/run_experiment.py train --config configs/v2/r4a_local.yaml --run-dir outputs/r4-local/recheck-a
+python scripts/run_experiment.py evaluate --config configs/v2/r4a_local.yaml --resume outputs/r4-local/recheck-a/step-000008.pt --run-dir outputs/r4-local/recheck-a-eval
+python scripts/run_experiment.py train --config configs/v2/r4d_local.yaml --steps 2 --run-dir outputs/r4-local/recheck-d-part
+python scripts/run_experiment.py resume --config configs/v2/r4d_local.yaml --steps 4 --resume outputs/r4-local/recheck-d-part/step-000002.pt --run-dir outputs/r4-local/recheck-d-resumed
+```
+
+每任务的采样比例、Loss 权重、batch 和模块 LR 分别配置；保存完整 Checkpoint 和独立多模态/LoRA Adapter。统一 JSONL 支持经审计的原始目标录音，不直接导入未知版本 codes。真实 Tiny T2A 同一 6 条训练样本 Loss 下降 4.52%；这只是局部优化证据。预测 WAV 已走通 Mimi/本地 ASR，但未达到音质验收，不能称 B1 已成立。实际命令、限制与 G4 入口见 [R4-L 报告](docs/stages/R4-local.md) · [G4 云端说明](docs/cloud/G4_SFT_RUNBOOK.md)。
 
 ### 5 流式推理
 

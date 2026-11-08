@@ -2,7 +2,7 @@
 
 > **文档类型**：项目主规划。下文保留 v2.0 的架构、研究设计和验收标准，执行顺序见 v2.1 执行附录。<br>
 > **版本 / 日期**：v2.1 / 2026-11-08<br>
-> **状态**：R0、R1、R2 与 R3-L 本地数据/训练准备已验收。R4-L 等待授权，G3 与正式训练尚未执行。<br>
+> **状态**：R0–R3-L 与 R4-L 本地代码/Tiny 验收已完成。R5-L 等待授权，G3 与正式训练尚未执行。<br>
 > **研究定位**：**以 Qwen3-1.7B 为主 Thinker，自主构建并训练轻量级 Thinker–Bridge–Talker Omni 模型；在可靠的多模态 SFT Baseline 上研究 Adaptive Bridge 与 Multimodal GRPO。**  
 > **最重要的要求**：**继承 P0–P5、最小改造、阶段验收、严格归因、历史只读。**
 
@@ -13,7 +13,7 @@
 你现在接手的是**已经完成 P0–P5 的现有仓库**，不是空仓库。不要重新初始化，不要从头再做 MiniMind-O，也不要在没有审计仓库的情况下用新代码覆盖旧实现。
 
 1. 首先读取仓库 `README.md`、`AGENTS.md`、`docs/PROJECT_PLAN.md`、`docs/项目待办.md`、两份 v2.1 配套规划及已验收阶段报告，并检查 `omni/`、`configs/`、`scripts/`、`tests/`、`experiments/` 与 Git 状态。
-2. **每次只执行用户授权的一阶段**。R3-L 本地数据与训练准备已完成，后续 R4-L、资源下载、正式训练与云任务分别取得授权。
+2. **每次只执行用户授权的一阶段**。R4-L 本地代码与 Tiny 验收已完成，后续 R5-L、资源下载、正式训练与云任务分别取得授权。
 3. 把 `docs/stages/P0.md`–`P5.md` 当作不可修改的历史证据：**不得编辑、移动、重命名、格式化、覆盖、追加内容或删除**。原始实验记录、权重与成果同样不得覆盖；历史脚本必须继续可复现。
 4. 将主线从“MiniMind Dense/MoE 复现 → Qwen 扩容”更新成 **“已有 MiniMind 成果归档 → Qwen3-1.7B 主干迁移 → Omni 对齐/SFT Baseline → Adaptive Bridge / Multimodal GRPO → 评测”**。MiniMind 实现仍保留作历史兼容测试和架构参考，**不再是必须正式训练或并行研究的 Baseline**。
 5. 先给出**实际文件级清单**与修改理由；完成授权阶段后执行测试、提交 `docs/stages/R0.md`（后续为 `R1.md`…），更新 `README.md` 与 `docs/项目待办.md`，报告变更与未解决问题；然后停止。
@@ -641,6 +641,15 @@ R2 的 Qwen Omni 前向与标签协议通过；用户确认数据准备范围与
 ---
 
 ## R4｜从 T2A 到多模态联合 SFT：正式 Omni Baseline
+
+### v2.1 本地验收（R4-L）
+
+- [x] A：复用现有 SFT，真实 Tiny T2A 同一训练集合 Loss 下降，冻结主权重。
+- [x] B：分桶、验证/早停、最佳状态、每码本 CE/STOP、预测 WAV/ASR 及明确失败记录。
+- [x] C：两路 Projector 独立更新、穿过冻结 Qwen 的梯度、模态对照；真实音频对照因没有同形状配对暂未测量，fixture 已通过。
+- [x] D：LoRA、任务采样/权重/分组 LR、跨进程完整恢复、独立 Adapter；真实 1.7B 零初始化 LoRA 前向误差为 0。
+- [x] `train/resume/evaluate/demo/profile` 真实入口、222 项回归、[R4-L 报告](stages/R4-local.md) 与 [G4 Runbook](cloud/G4_SFT_RUNBOOK.md)。
+- [ ] G4 正式训练、真实 QA A2A、可懂语音、人评、CUDA 训练与 B1 Benchmark。下方原正式验收要求保持未完成。
 
 ### 前置条件
 

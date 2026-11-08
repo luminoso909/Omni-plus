@@ -51,6 +51,8 @@ def train_step(
     amp_dtype: torch.dtype | None = None,
     stop_weight: float = 10.0,
     grad_clip: float = 1.0,
+    batch_tasks: list[str] | None = None,
+    task_weights: dict[str, float] | None = None,
 ) -> dict[str, float]:
     """一个 optimizer step；batches 为梯度累积组，末组允许不足预设长度。"""
     if not batches:
@@ -60,8 +62,24 @@ def train_step(
     model.train()
     optimizer.zero_grad(set_to_none=True)
     counts = loss_counts(batches)
+    # 可选联合 SFT：各任务先按有效 token 归一化；权重分母固定包含配置的全部任务。
+    task_counts = {}
+    if batch_tasks is not None:
+        if len(batch_tasks) != len(batches):
+            raise ValueError("batch_tasks 必须与累积 micro-batch 一一对应。")
+        task_counts = {
+            task: loss_counts([b for b, t in zip(batches, batch_tasks, strict=True) if t == task])
+            for task in set(batch_tasks)
+        }
+        weights = dict(task_weights or {})
+        weights.update({task: weights.get(task, 1.0) for task in task_counts})
+        if any(not np.isfinite(value) or value <= 0 for value in weights.values()):
+            raise ValueError("任务 Loss 权重必须为有限正数。")
+        weight_sum = sum(weights.values())
     metrics = dict.fromkeys(("total", "text", "audio", "aux"), 0.0)
-    for batch in batches:
+    for index, batch in enumerate(batches):
+        task = None if batch_tasks is None else batch_tasks[index]
+        scale = 1.0 if task is None else weights[task] / weight_sum
         batch = move_batch(batch, device)
         with torch.autocast(
             torch.device(device).type, dtype=amp_dtype, enabled=amp_dtype is not None
@@ -75,9 +93,10 @@ def train_step(
                 batch["audio_labels"],
                 model.config.audio_stop_token,
                 stop_weight,
-                counts,
-                aux_scale=1 / len(batches),
+                counts if task is None else task_counts[task],
+                aux_scale=1 / (len(batches) if task is None else batch_tasks.count(task)),
             )
+            losses = {key: value * scale for key, value in losses.items()}
         scaler.scale(losses["total"]).backward()
         for name in metrics:
             metrics[name] += float(losses[name].detach())

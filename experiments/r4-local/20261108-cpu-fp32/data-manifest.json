@@ -1,0 +1,258 @@
+{
+  "status": "prepared_and_independently_loaded",
+  "manifest_path": "outputs/r4-local/audited-inputs/t2a.jsonl",
+  "manifest_sha256": "b5c39038722e66f8d97ba0ef44a1ba71d1f77e6fe223267b11f3391faa83c4d9",
+  "source_license_note": "官方卡未逐文件区分两项许可；子集仅本地诊断，不公开再分发。",
+  "records": [
+    {
+      "sample_id": "minimind-o:question-t2a:31",
+      "source": "jingyaogong/minimind-o_dataset",
+      "revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+      "license": "apache-2.0; gpl-3.0 (upstream mixed declaration; local diagnostics only)",
+      "split": "train",
+      "source_file": "sft_a2a_mini.parquet",
+      "source_row": 31,
+      "source_file_sha256": "0a36847c5d283c40ad64e50bce6297ece4c86d2c85aa97ae275b2de982c3475d",
+      "prior_r3_group": "922abcdc61f1ef604033aac1f980d9ef53f4c87c910e06e3f60a7da0c19cccb2",
+      "derivation": "original_question_recording_readaloud",
+      "media_sha256": "c7ba7a1d743bc712be304bf853885d5f5145ed6b15646a8a9d05fb887d189e62",
+      "bytes": 7725,
+      "original_sampling_rate": 12000,
+      "original_format": "MP3",
+      "samples": 43270,
+      "seconds": 3.6058333333333334
+    },
+    {
+      "sample_id": "minimind-o:question-t2a:7",
+      "source": "jingyaogong/minimind-o_dataset",
+      "revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+      "license": "apache-2.0; gpl-3.0 (upstream mixed declaration; local diagnostics only)",
+      "split": "train",
+      "source_file": "sft_a2a_mini.parquet",
+      "source_row": 7,
+      "source_file_sha256": "0a36847c5d283c40ad64e50bce6297ece4c86d2c85aa97ae275b2de982c3475d",
+      "prior_r3_group": "fe73bc6bcb40463d3ae57ef2b57a7a2da7655f358470561215f1715aefe474a0",
+      "derivation": "original_question_recording_readaloud",
+      "media_sha256": "aa928cf7afd11810b644f6de38dfd36fbe19c7f50259d58a761fa135ed194145",
+      "bytes": 3885,
+      "original_sampling_rate": 12000,
+      "original_format": "MP3",
+      "samples": 20207,
+      "seconds": 1.6839166666666667
+    },
+    {
+      "sample_id": "minimind-o:question-t2a:22",
+      "source": "jingyaogong/minimind-o_dataset",
+      "revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+      "license": "apache-2.0; gpl-3.0 (upstream mixed declaration; local diagnostics only)",
+      "split": "validation",
+      "source_file": "sft_a2a_mini.parquet",
+      "source_row": 22,
+      "source_file_sha256": "0a36847c5d283c40ad64e50bce6297ece4c86d2c85aa97ae275b2de982c3475d",
+      "prior_r3_group": "91c9412e0109d06c27f3d9127dcc770f2139a707652a4d442cb3d13ba309d43d",
+      "derivation": "original_question_recording_readaloud",
+      "media_sha256": "a167e0d4f018721ccd094f60f16cea96dd234c92d32a43e2ddfd5387fbff4326",
+      "bytes": 5613,
+      "original_sampling_rate": 12000,
+      "original_format": "MP3",
+      "samples": 30771,
+      "seconds": 2.56425
+    },
+    {
+      "sample_id": "minimind-o:question-t2a:44",
+      "source": "jingyaogong/minimind-o_dataset",
+      "revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+      "license": "apache-2.0; gpl-3.0 (upstream mixed declaration; local diagnostics only)",
+      "split": "test",
+      "source_file": "sft_a2a_mini.parquet",
+      "source_row": 44,
+      "source_file_sha256": "0a36847c5d283c40ad64e50bce6297ece4c86d2c85aa97ae275b2de982c3475d",
+      "prior_r3_group": "ebd6c96303c8ce78f7fbf7756e6943b73d9b77356c7c751cbe53d248b359b87a",
+      "derivation": "original_question_recording_readaloud",
+      "media_sha256": "efb6127827425bfeb3569f43af966e9879627874d4ffad6e0665303f8d595cee",
+      "bytes": 4365,
+      "original_sampling_rate": 12000,
+      "original_format": "MP3",
+      "samples": 23552,
+      "seconds": 1.9626666666666666
+    }
+  ],
+  "counts": {
+    "train": 2,
+    "validation": 1,
+    "test": 1
+  },
+  "limitations": "Original upstream input recordings plus accompanying transcripts form T2A read-aloud diagnostics; unknown answer codes are quarantined. Not QA A2A or a quality benchmark.",
+  "cache_path": ".cache/r4-local/audited-t2a-v1",
+  "cache_manifest_sha256": "a1a4fe780ae3e8da9146af5c837dd1fba692e3f6a8c8a63c1607e76c5cd539f1",
+  "cached_files": {
+    "train.pt": "ef3dc78e7894e9c9319c10dde9fc2f9ec30309061b0a3b054def1f3a9ee78a4b",
+    "validation.pt": "a643eb28bc7a6ab52891de110417a64f0fff1f26dcc4111421d3caa96ad3bffc",
+    "test.pt": "b1bbf430eefcdc3a93ec88457d8b611bccdd950cd07e8690e2fc9d6bf38d33f3"
+  },
+  "processor_versions": {
+    "transformers": "4.57.6",
+    "funasr": "1.4.17",
+    "torch": "2.15.0",
+    "scipy": "1.18.1",
+    "soundfile": "0.14.0",
+    "pillow": "13.0.0"
+  },
+  "qwen_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "implementation_sha256": {
+    "omni/data/sft_sources.py": "4b0794ed5d5943cdb2524d42811f5ec6a6b21523e1893c8b70ba1a81972b1072",
+    "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+    "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585",
+    "omni/data/audio_alignment.py": "f341cb0a766d204f383d2406db0724b4341b25000c20ecb80f4bbd4ff516c9cd",
+    "omni/models/encoders/model_encoders.py": "faa407107bfdbb4798e4f7dcc3c1a795f4a7d8cd798426d3658d500e997a0c87",
+    "omni/inference/codec.py": "7c872248b12c439d15e55fe32d125176179988520f9001da90661f91ae3b1e75"
+  },
+  "mimi_weight_sha256": "7542ee039d3025d5089cf227d21df64b6b8eff08fcd376a11a1fbd178dd9d3f5",
+  "target_sampling_rate": 24000,
+  "samples": {
+    "train": [
+      {
+        "sample_id": "minimind-o:question-t2a:7",
+        "tokens": 55,
+        "audio_labels_shape": [
+          8,
+          55
+        ],
+        "codebook_targets": [
+          23,
+          23,
+          23,
+          23,
+          23,
+          23,
+          23,
+          23
+        ],
+        "stop_targets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "text_targets": 9
+      },
+      {
+        "sample_id": "minimind-o:question-t2a:31",
+        "tokens": 88,
+        "audio_labels_shape": [
+          8,
+          88
+        ],
+        "codebook_targets": [
+          47,
+          47,
+          47,
+          47,
+          47,
+          47,
+          47,
+          47
+        ],
+        "stop_targets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "text_targets": 18
+      }
+    ],
+    "validation": [
+      {
+        "sample_id": "minimind-o:question-t2a:22",
+        "tokens": 67,
+        "audio_labels_shape": [
+          8,
+          67
+        ],
+        "codebook_targets": [
+          34,
+          34,
+          34,
+          34,
+          34,
+          34,
+          34,
+          34
+        ],
+        "stop_targets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "text_targets": 10
+      }
+    ],
+    "test": [
+      {
+        "sample_id": "minimind-o:question-t2a:44",
+        "tokens": 59,
+        "audio_labels_shape": [
+          8,
+          59
+        ],
+        "codebook_targets": [
+          26,
+          26,
+          26,
+          26,
+          26,
+          26,
+          26,
+          26
+        ],
+        "stop_targets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "text_targets": 10
+      }
+    ]
+  },
+  "commands": [
+    "HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=4 .venv/bin/python scripts/run_experiment.py prepare --config outputs/r4-local/audited-t2a.yaml > outputs/r4-local/audited-t2a-prepare.log 2>&1",
+    "HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=4 .venv/bin/python scripts/run_experiment.py prepare --config outputs/r4-local/audited-t2a.yaml > outputs/r4-local/audited-t2a-cache-hit.log 2>&1"
+  ],
+  "cache_reuse_verified": true,
+  "initial_manual_check_note": "Manual assertion first assumed STOP=2048 and failed; corrected to contract audio_stop_token=2050. Data and implementation unchanged.",
+  "r3_equivalence": {
+    "samples": 4,
+    "tensor_values": "exact_equal",
+    "rtol": 0,
+    "atol": 0
+  },
+  "r3_training_data": {
+    "manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+    "counts": {
+      "train": 24,
+      "validation": 4,
+      "test": 4
+    },
+    "evidence": "experiments/r3-local/20261108-cpu-fp32/data-manifest.json",
+    "usage": "train/validation only; test used for IO compatibility, never model selection"
+  }
+}

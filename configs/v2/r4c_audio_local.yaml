@@ -1,0 +1,5 @@
+# R4-C：仅训练 Audio Projector，数据输入为 SenseVoice 的冻结特征。
+extends: r4c_vision_local.yaml
+training:
+  recipe: audio
+  tasks: [a2t]

@@ -1,4 +1,4 @@
-"""R3-L 配置、参数分组和有限步数验收；训练及恢复复用 P4。"""
+"""R3/R4 共用配置、数据调度和 SFT 入口；单步训练及完整恢复沿用 P4。"""
 
 import hashlib
 import json
@@ -28,8 +28,36 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def merge_settings(path: Path, parents: tuple[Path, ...] = ()) -> dict:
+    """显式相对路径继承；配置区合并，任务预算/权重/LR表与列表完整替换。"""
+    path = path.resolve()
+    if path in parents:
+        raise ValueError("配置 extends 形成循环。")
+
+    values = yaml.safe_load(path.read_text())
+    if not isinstance(values, dict):
+        raise ValueError("配置必须是 YAML 字典。")
+    parent = values.pop("extends", None)
+    base = merge_settings(path.parent / parent, (*parents, path)) if parent else {}
+
+    def merge(left: dict, right: dict) -> dict:
+        for key, value in right.items():
+            left[key] = (
+                merge(dict(left[key]), value)
+                if isinstance(left.get(key), dict)
+                and isinstance(value, dict)
+                and key
+                not in {"tasks", "sample_weights", "task_weights", "task_batch_sizes", "group_lrs"}
+                else value
+            )
+        return left
+
+    return merge(base, values)
+
+
 def read_settings(path: Path, root: Path) -> dict:
-    settings = yaml.safe_load(path.read_text())
+    settings = merge_settings(path)
+    version = settings.get("schema_version")
     allowed = {
         "root": {"schema_version", "assets", "data", "model", "training", "lora"},
         "assets": {"qwen_dir", "reference_root"},
@@ -54,6 +82,27 @@ def read_settings(path: Path, root: Path) -> dict:
         },
         "lora": {"enabled"},
     }
+    if version == 2:
+        allowed["root"] |= {"evaluation"}
+        allowed["data"] |= {"audited_manifest", "audited_manifest_sha256"}
+        allowed["model"] |= {"initialization"}
+        allowed["training"] |= {
+            "eval_interval",
+            "save_interval",
+            "patience",
+            "min_delta",
+            "group_lrs",
+            "sample_weights",
+            "task_weights",
+            "task_batch_sizes",
+            "length_bucket_size",
+            "gradient_checkpointing",
+            "allow_diagnostic_a2a",
+            "max_seconds",
+        }
+        allowed["lora"] |= {"rank", "alpha", "targets", "dropout"}
+        allowed["evaluation"] = {"max_new_tokens", "asr_dir"}
+        settings.setdefault("evaluation", {})
     for name, keys in allowed.items():
         section = settings if name == "root" else settings[name]
         if not isinstance(section, dict) or set(section) - keys:
@@ -69,14 +118,19 @@ def read_settings(path: Path, root: Path) -> dict:
     if set(settings["model"].get("tiny", {})) - tiny_keys:
         raise ValueError("未知 tiny 模型配置键。")
     training = settings["training"]
-    if settings.get("schema_version") != 1:
-        raise ValueError("需要 schema_version: 1。")
+    if version not in {1, 2}:
+        raise ValueError("需要 schema_version: 1 或 2。")
     if settings["model"]["kind"] not in {"tiny", "qwen3"}:
         raise ValueError("model.kind 仅支持 tiny 或 qwen3。")
-    if settings.get("lora", {}).get("enabled", False):
+    if version == 1 and settings.get("lora", {}).get("enabled", False):
         raise ValueError("LoRA 仅预留配置；完整实现和验收在 R4-L。")
-    if training["recipe"] not in {"r4a", "projectors"}:
-        raise ValueError("recipe 仅支持 r4a 或 projectors。")
+    recipes = (
+        {"r4a", "projectors"}
+        if version == 1
+        else {"r4a", "r4b", "projectors", "vision", "audio", "joint"}
+    )
+    if training["recipe"] not in recipes:
+        raise ValueError("未知训练 recipe。")
     if training["device"] not in {"cpu", "mps", "cuda"}:
         raise ValueError("device 需要 cpu、mps 或 cuda。")
     if training["dtype"] not in {"float32", "bfloat16", "float16"}:
@@ -84,7 +138,7 @@ def read_settings(path: Path, root: Path) -> dict:
     for key in ("steps", "batch_size", "accumulation_steps", "threads"):
         if type(training[key]) is not int or training[key] <= 0:
             raise ValueError(f"training.{key} 必须为正整数。")
-    if training["steps"] > 10:
+    if version == 1 and training["steps"] > 10:
         raise ValueError("R3-L smoke 最多 10 步；100-step Profile 属于后续授权。")
     for key in ("learning_rate", "grad_clip"):
         if not math.isfinite(training[key]) or training[key] <= 0:
@@ -96,10 +150,13 @@ def read_settings(path: Path, root: Path) -> dict:
         raise ValueError("需要 linear scheduler，warmup_steps 应小于 steps。")
     if not training["tasks"] or set(training["tasks"]) - set(settings["data"]["tasks"]):
         raise ValueError("训练任务必须属于有限数据任务清单。")
-    if training["recipe"] == "r4a" and set(training["tasks"]) != {"t2a"}:
+    if training["recipe"] in {"r4a", "r4b"} and set(training["tasks"]) != {"t2a"}:
         raise ValueError("R4-A 初始配方只使用 T2A；多模态投影验证使用 projectors。")
     if training["recipe"] == "projectors" and "t2a" in training["tasks"]:
         raise ValueError("Projector 验证需要 I2T、A2T 或 A2A 输入模态。")
+
+    if version == 2:
+        validate_r4(settings, root)
 
     # 模型路径始终指向现成资产，tiny 也不能悄悄换用 MiniMind tokenizer。
     model_dir = root / settings["assets"]["qwen_dir"]
@@ -118,6 +175,95 @@ def read_settings(path: Path, root: Path) -> dict:
         if not (model_dir / name).is_file():
             raise FileNotFoundError(model_dir / name)
     return settings
+
+
+def validate_r4(settings: dict, root: Path) -> None:
+    training = settings["training"]
+    for key in ("eval_interval", "save_interval", "length_bucket_size"):
+        if type(training[key]) is not int or training[key] < 1:
+            raise ValueError(f"training.{key} 必须为正整数。")
+    if type(training["patience"]) is not int or training["patience"] < 0:
+        raise ValueError("patience 必须为非负整数；0 表示禁用早停。")
+    for key in ("min_delta", "max_seconds"):
+        if not math.isfinite(training[key]) or training[key] < 0:
+            raise ValueError(f"training.{key} 必须为有限非负数。")
+    if training["gradient_checkpointing"]:
+        raise ValueError("冻结 Qwen 使用 eval；未验收的 gradient checkpointing 不能启用。")
+    tasks = set(training["tasks"])
+    for key in ("sample_weights", "task_weights", "task_batch_sizes"):
+        values = training[key]
+        if set(values) - tasks or any(not math.isfinite(v) or v <= 0 for v in values.values()):
+            raise ValueError(f"{key} 只能配置选定任务的有限正数。")
+    if any(type(n) is not int for n in training["task_batch_sizes"].values()):
+        raise ValueError("task_batch_sizes 必须为整数。")
+    groups = {
+        "bridge",
+        "talker",
+        "audio_embedding",
+        "audio_heads",
+        "vision_proj",
+        "audio_proj",
+        "lora",
+    }
+    if set(training["group_lrs"]) - groups or any(
+        not math.isfinite(v) or v <= 0 for v in training["group_lrs"].values()
+    ):
+        raise ValueError("group_lrs 需要合法参数组和有限正学习率。")
+    if training["recipe"] == "vision" and tasks != {"i2t"}:
+        raise ValueError("vision 独立对齐只使用 I2T。")
+    if training["recipe"] == "audio" and tasks != {"a2t"}:
+        raise ValueError("audio 独立对齐只使用 A2T。")
+    lora = settings["lora"]
+    if lora.get("enabled") and training["recipe"] != "joint":
+        raise ValueError("LoRA 仅在 joint 配方开启。")
+    if lora.get("dropout", 0) != 0:
+        raise ValueError("已验收 LoRA 的 dropout 必须为 0。")
+    initial = settings["model"].get("initialization", {})
+    if set(initial) - {
+        "talker",
+        "talker_checkpoint",
+        "components_checkpoint",
+        "vision_checkpoint",
+        "audio_checkpoint",
+    }:
+        raise ValueError("未知 initialization 配置键。")
+    if initial.get("talker", "random") not in {"random", "pretrained"}:
+        raise ValueError("Talker 初始化需要 random 或 pretrained。")
+    if (initial.get("talker", "random") == "pretrained") != bool(initial.get("talker_checkpoint")):
+        raise ValueError("pretrained Talker 需要显式兼容权重；random 不能指定它。")
+    for key in (
+        "talker_checkpoint",
+        "components_checkpoint",
+        "vision_checkpoint",
+        "audio_checkpoint",
+    ):
+        if initial.get(key) and not (root / initial[key]).is_file():
+            raise FileNotFoundError(root / initial[key])
+    if "audited_manifest" in settings["data"]:
+        if not settings["data"].get("audited_manifest_sha256"):
+            raise ValueError("审计源需要 audited_manifest_sha256。")
+    if not 1 <= settings["evaluation"].get("max_new_tokens", 128) <= 4096:
+        raise ValueError("生成预算必须在 1–4096。")
+
+
+def data_contract(settings: dict, root: Path) -> dict:
+    if settings["data"].get("audited_manifest"):
+        from omni.data.sft_sources import inspect_sources
+
+        return inspect_sources(settings, root)
+    from omni.data.r3_prepare import inspect_data
+
+    return inspect_data(settings, root)
+
+
+def prepare(settings: dict, root: Path) -> dict:
+    if settings["data"].get("audited_manifest"):
+        from omni.data.sft_sources import prepare_sources
+
+        return prepare_sources(settings, root)
+    from omni.data.r3_prepare import prepare_data
+
+    return prepare_data(settings, root)
 
 
 def model_config(settings: dict, root: Path) -> tuple[OmniPlusConfig, Qwen3Config]:
@@ -182,11 +328,63 @@ def build_model(settings: dict, root: Path, *, meta: bool = False) -> OmniPlusOm
             if any(loading.values()):
                 raise ValueError(f"Qwen 权重未严格加载：{loading}")
         model = OmniPlusOmni(QwenBackend(thinker), config)
+    from omni.training.adapters import inject_lora
+
+    inject_lora(model.thinker.model, settings["lora"])
+    if not meta:
+        initialize_components(model, settings, root)
     configure_parameters(model, settings["training"]["recipe"])
     return model
 
 
+def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
+    """先导入完整多模态组件，再按显式文件覆盖 Talker/两个独立 Projector。"""
+    initial = settings["model"].get("initialization", {})
+    for key, prefix in (
+        ("components_checkpoint", ""),
+        ("talker_checkpoint", "talker"),
+        ("vision_checkpoint", "vision_proj"),
+        ("audio_checkpoint", "audio_proj"),
+    ):
+        if not initial.get(key):
+            continue
+        payload = torch.load(root / initial[key], map_location="cpu", weights_only=True)
+        state = payload.get("model", payload)
+        if prefix:
+            module = model.get_submodule(prefix)
+            values = {
+                name.removeprefix(prefix + "."): value
+                for name, value in state.items()
+                if name.startswith(prefix + ".")
+            }
+            if not values:
+                values = state
+            expected = module.state_dict()
+        else:
+            expected = {
+                name: value
+                for name, value in model.state_dict().items()
+                if not name.startswith("thinker.")
+            }
+            values = {
+                name: value for name, value in state.items() if not name.startswith("thinker.")
+            }
+        if expected.keys() != values.keys() or any(
+            expected[name].shape != values[name].shape
+            or expected[name].dtype != values[name].dtype
+            or (values[name].is_floating_point() and not values[name].isfinite().all())
+            for name in expected
+        ):
+            raise ValueError(f"初始化 Checkpoint 的键、shape、dtype 或数值不兼容：{key}")
+
+        with torch.no_grad():
+            for name, value in expected.items():
+                value.copy_(values[name])
+
+
 def parameter_group(name: str) -> str:
+    if ".lora_a." in name or ".lora_b." in name:
+        return "lora"
     if name.startswith("talker.embed_tokens."):
         return "audio_embedding"
     if name.startswith("talker.lm_head."):
@@ -200,7 +398,11 @@ def configure_parameters(model: nn.Module, recipe: str) -> dict:
     active = {"bridge", "talker", "audio_embedding", "audio_heads"}
     if recipe == "projectors":
         active = {"vision_proj", "audio_proj"}
-    elif recipe != "r4a":
+    elif recipe in {"vision", "audio"}:
+        active = {recipe + "_proj"}
+    elif recipe == "joint":
+        active |= {"vision_proj", "audio_proj", "lora"}
+    elif recipe not in {"r4a", "r4b"}:
         raise ValueError("未知冻结配方。")
     groups = {}
     for name, param in model.named_parameters():
@@ -226,8 +428,22 @@ def parameter_digest(model: nn.Module, *, frozen: bool) -> str:
 
 def optimizer_state(model: nn.Module, settings: dict) -> tuple:
     training = settings["training"]
+    params = [param for param in model.parameters() if param.requires_grad]
+    if settings.get("schema_version") == 2:
+        groups = {}
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                groups.setdefault(parameter_group(name), []).append(param)
+        params = [
+            dict(
+                params=values,
+                name=name,
+                lr=training["group_lrs"].get(name, training["learning_rate"]),
+            )
+            for name, values in groups.items()
+        ]
     optimizer = torch.optim.AdamW(
-        [param for param in model.parameters() if param.requires_grad],
+        params,
         lr=training["learning_rate"],
         weight_decay=training["weight_decay"],
     )
@@ -244,17 +460,105 @@ def optimizer_state(model: nn.Module, settings: dict) -> tuple:
     return optimizer, scheduler, scaler, dtype
 
 
-def smoke(
-    settings: dict,
-    root: Path,
-    run_dir: Path,
-    *,
-    resume: Path | None = None,
-    steps: int | None = None,
-) -> dict:
-    from omni.data.r3_prepare import inspect_data, load_prepared
+def run_identity(settings: dict, root: Path) -> dict:
+    files = (
+        "omni/training/r3_local.py",
+        "omni/training/sft.py",
+        "omni/training/losses.py",
+        "omni/models/model_omni_v2.py",
+        "omni/models/thinker/qwen_backend.py",
+        "omni/models/talker/model_talker.py",
+        "omni/models/thinker/model_thinker.py",
+        "omni/data/r3_prepare.py",
+        "omni/data/qwen_omni.py",
+    )
+    if settings["schema_version"] == 2:
+        files += ("omni/training/adapters.py", "omni/evaluation/sft.py", "omni/data/sft_sources.py")
+    return dict(
+        settings=settings,
+        data_manifest_sha256=digest(root / settings["data"]["cache_dir"] / "manifest.json"),
+        initialization_sha256={
+            name: digest(root / value)
+            for name, value in settings["model"].get("initialization", {}).items()
+            if name.endswith("_checkpoint") and value
+        },
+        runtime=dict(torch=str(torch.__version__), transformers=transformers.__version__),
+        source_sha256={name: digest(root / name) for name in files},
+    )
 
-    training = settings["training"]
+
+def adapter_identity(settings: dict, contract: dict) -> dict:
+    """独立 Adapter 绑定基座与 tokenizer；tiny 还绑定随机基座的构造 seed。"""
+    return dict(
+        qwen_revision=contract["qwen_revision"],
+        qwen_assets={
+            name: value for name, value in contract["assets"].items() if name.startswith("qwen/")
+        },
+        model_kind=settings["model"]["kind"],
+        tiny=settings["model"].get("tiny") if settings["model"]["kind"] == "tiny" else None,
+        seed=settings["training"]["seed"] if settings["model"]["kind"] == "tiny" else None,
+    )
+
+
+def next_batches(samples: list[dict], progress: dict, training: dict, collate) -> tuple[list, list]:
+    """平滑加权任务轮转 + 任务内长度分桶；所有游标都放进 Checkpoint。"""
+    tasks = training["tasks"]
+    state = progress.setdefault(
+        "sampler", {task: dict(score=0.0, epoch=0, cursor=0) for task in tasks}
+    )
+    weights = {task: training.get("sample_weights", {}).get(task, 1.0) for task in tasks}
+    batches, selected = [], []
+    for _ in range(training["accumulation_steps"]):
+        for task in tasks:
+            state[task]["score"] += weights[task]
+        task = max(tasks, key=lambda name: state[name]["score"])
+        state[task]["score"] -= sum(weights.values())
+        pool = [row for row in samples if row["task"] == task]
+        if not pool:
+            raise ValueError(f"训练缓存缺少任务：{task}")
+        cursor = state[task]
+        if cursor["cursor"] >= len(pool):
+            cursor["epoch"], cursor["cursor"] = cursor["epoch"] + 1, 0
+        seed = training["seed"] + tasks.index(task) * 100003 + cursor["epoch"]
+        order = torch.randperm(len(pool), generator=torch.Generator().manual_seed(seed)).tolist()
+        size = training.get("task_batch_sizes", {}).get(task, training["batch_size"])
+        bucket = size * training.get("length_bucket_size", 1)
+        order = [
+            index
+            for start in range(0, len(order), bucket)
+            for index in sorted(
+                order[start : start + bucket], key=lambda i: len(pool[i]["input_ids"])
+            )
+        ]
+        indices = order[cursor["cursor"] : cursor["cursor"] + size]
+        cursor["cursor"] += len(indices)
+        batches.append(collate([pool[index] for index in indices]))
+        selected.append(task)
+    return batches, selected
+
+
+def task_evaluation(model: nn.Module, samples: list[dict], training: dict) -> dict:
+    from omni.evaluation.sft import evaluate_sft
+
+    collate = OmniCollator(model.config)
+    result = {}
+    for task in training["tasks"]:
+        rows = [row for row in samples if row["task"] == task]
+        if not rows:
+            raise ValueError(f"验证缓存缺少任务：{task}")
+        size = training.get("task_batch_sizes", {}).get(task, training["batch_size"])
+        batches = [collate(rows[start : start + size]) for start in range(0, len(rows), size)]
+        result[task] = evaluate_sft(model, batches, training["device"], training["stop_weight"])
+    weights = training.get("task_weights", {})
+    total = sum(weights.get(task, 1.0) for task in result)
+    return dict(
+        tasks=result,
+        total=sum(weights.get(task, 1.0) * value["total"] for task, value in result.items())
+        / total,
+    )
+
+
+def check_device(training: dict) -> None:
     device = training["device"]
     if device == "mps" and not torch.backends.mps.is_available():
         raise RuntimeError("MPS 不可用。")
@@ -262,42 +566,94 @@ def smoke(
         raise RuntimeError("CUDA 尚未在本机验收；需要实际可用的 GPU。")
     if device != "cuda" and training["dtype"] != "float32":
         raise ValueError("本地验收使用 FP32；混合精度留给 CUDA Profile。")
+
+
+def check_task_semantics(settings: dict, manifest: dict) -> None:
+    if "a2a" not in settings["training"]["tasks"] or settings["schema_version"] == 1:
+        return
+    if settings["training"]["allow_diagnostic_a2a"]:
+        return
+    if not settings["data"].get("audited_manifest"):
+        raise ValueError("旧缓存 A2A 仅为 echo 诊断；正式联合训练需要可信 QA 目标语音。")
+    rows = [row for split in manifest.get("selections", {}).values() for row in split]
+    qa = [row for row in rows if row["task"] == "a2a"]
+    if not qa or any(row.get("a2a_kind") != "qa" for row in qa):
+        raise ValueError("问答式 A2A 必须提供逐条已审计 QA 目标，不能复用 echo。")
+
+
+def loss_curve(path: Path, rows: list[dict], evaluations: list[dict]) -> None:
+    """不增加绘图库依赖；输出可直接浏览的真实 Loss 曲线。"""
+    series = [
+        ("train", "#2166ac", [(row["step"], row["total"]) for row in rows]),
+        ("validation", "#b2182b", [(row["step"], row["total"]) for row in evaluations]),
+    ]
+    points = [point for _, _, values in series for point in values]
+    if not points:
+        return
+    xmax = max(x for x, _ in points) or 1
+    ymin, ymax = min(y for _, y in points), max(y for _, y in points)
+    span = ymax - ymin or 1.0
+    svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320" viewBox="0 0 640 320">',
+        '<rect width="640" height="320" fill="white"/>',
+        '<path d="M55 20V275H620" fill="none" stroke="black"/>',
+        '<text x="280" y="310">optimizer step</text>',
+    ]
+    for index, (label, color, values) in enumerate(series):
+        coords = " ".join(
+            f"{55 + x / xmax * 555:.1f},{260 - (y - ymin) / span * 220:.1f}" for x, y in values
+        )
+        svg.append(f'<polyline points="{coords}" stroke="{color}" fill="none" stroke-width="2"/>')
+        svg.append(f'<text x="{350 + index * 120}" y="18" fill="{color}">{label}</text>')
+    svg.extend(
+        [
+            f'<text x="2" y="45">{ymax:.3f}</text>',
+            f'<text x="2" y="265">{ymin:.3f}</text>',
+            "</svg>",
+        ]
+    )
+    path.write_text("\n".join(svg) + "\n")
+
+
+def smoke(
+    settings: dict,
+    root: Path,
+    run_dir: Path,
+    *,
+    resume: Path | None = None,
+    steps: int | None = None,
+    command: str = "smoke",
+) -> dict:
+    from omni.data.r3_prepare import load_prepared
+    from omni.training.adapters import export_adapter
+
+    training = settings["training"]
+    modern = settings["schema_version"] == 2
+    device = training["device"]
+    check_device(training)
     target = training["steps"] if steps is None else steps
     if not 0 < target <= training["steps"]:
         raise ValueError("--steps 必须在配置步数预算内。")
+    if (command == "smoke" and target > 10) or (command == "profile" and target > 100):
+        raise ValueError("smoke 最多 10 步；profile 最多 100 步。")
     if run_dir.exists():
         raise FileExistsError(f"拒绝覆盖运行目录：{run_dir}")
 
-    # 在加载模型前验证数据及完整的运行身份，错误恢复不能消耗训练步骤。
-    contract = inspect_data(settings, root)
-    samples = load_prepared(root / settings["data"]["cache_dir"], "train", contract)
-    manifest_path = root / settings["data"]["cache_dir"] / "manifest.json"
-    identity = dict(
-        settings=settings,
-        data_manifest_sha256=digest(manifest_path),
-        runtime=dict(torch=str(torch.__version__), transformers=transformers.__version__),
-        source_sha256={
-            name: digest(root / name)
-            for name in (
-                "omni/training/r3_local.py",
-                "omni/training/sft.py",
-                "omni/training/losses.py",
-                "omni/models/model_omni_v2.py",
-                "omni/models/thinker/qwen_backend.py",
-                "omni/models/talker/model_talker.py",
-                "omni/models/thinker/model_thinker.py",
-                "omni/data/r3_prepare.py",
-                "omni/data/qwen_omni.py",
-            )
-        },
-    )
-    checkpoint = None
+    # 先验证缓存及恢复身份，再创建模型。历史测试集不用于训练或选择模型。
+    contract = data_contract(settings, root)
+    cache_dir = root / settings["data"]["cache_dir"]
+    samples = load_prepared(cache_dir, "train", contract)
+    validation = load_prepared(cache_dir, "validation", contract) if modern else []
+    manifest = json.loads((cache_dir / "manifest.json").read_text())
+    check_task_semantics(settings, manifest)
+    identity = run_identity(settings, root)
     if resume:
         checkpoint = torch.load(resume, map_location="cpu", weights_only=True)
         if checkpoint["progress"]["identity"] != identity:
-            raise ValueError("Resume 配置或数据版本不一致。")
+            raise ValueError("Resume 配置、代码或数据版本不一致。")
         if checkpoint["progress"]["step"] >= target:
             raise ValueError("目标 step 必须大于恢复 step。")
+        del checkpoint
 
     seed = training["seed"]
     random.seed(seed)
@@ -309,33 +665,46 @@ def smoke(
     groups = configure_parameters(model, training["recipe"])
     optimizer, scheduler, scaler, dtype = optimizer_state(model, settings)
     progress = dict(step=0, epoch=0, cursor=0, identity=identity)
+    if modern:
+        progress.update(best_loss=float("inf"), bad_evaluations=0, best_step=None, evaluations=[])
     if resume:
-        del checkpoint
         progress = load_checkpoint(resume, model, optimizer, scaler)
         scheduler.load_state_dict(progress["scheduler"])
-
-    # 每个缓存样本携带任务 metadata；只把 Collator 所需张量交给旧训练步骤。
     chosen = [row for row in samples if row["task"] in training["tasks"]]
-    if not chosen:
-        raise ValueError("缓存中没有配置要求的训练任务。")
+    if set(row["task"] for row in chosen) != set(training["tasks"]):
+        raise ValueError("缓存缺少配置要求的训练任务。")
     collate = OmniCollator(model.config)
     frozen_before = parameter_digest(model, frozen=True)
     trainable_before = parameter_digest(model, frozen=False)
     run_dir.mkdir(parents=True, exist_ok=False)
-    rows = []
+    (run_dir / "resolved_config.yaml").write_text(
+        yaml.safe_dump(settings, allow_unicode=True, sort_keys=False)
+    )
+    rows, gradient_groups = [], {}
     start_step = progress["step"]
+    stop_reason = "step_budget"
+    # 固定训练探针用于观察过拟合；不把不同随机 batch 的 Loss 当作下降证据。
+    probe = [next(row for row in chosen if row["task"] == task) for task in training["tasks"]]
+    initial_probe = task_evaluation(model, probe, training) if modern else None
+    if device == "cuda":
+        torch.cuda.reset_peak_memory_stats()
+        torch.cuda.synchronize()
+    loop_started = time.perf_counter()
     while progress["step"] < target:
-        batches = []
-        for _ in range(training["accumulation_steps"]):
-            if progress["cursor"] >= len(chosen):
-                progress["epoch"], progress["cursor"] = progress["epoch"] + 1, 0
-            order = torch.randperm(
-                len(chosen), generator=torch.Generator().manual_seed(seed + progress["epoch"])
-            ).tolist()
-            start = progress["cursor"]
-            indices = order[start : start + training["batch_size"]]
-            batches.append(collate([chosen[index] for index in indices]))
-            progress["cursor"] += len(indices)
+        if modern:
+            batches, tasks = next_batches(chosen, progress, training, collate)
+        else:
+            batches, tasks = [], None
+            for _ in range(training["accumulation_steps"]):
+                if progress["cursor"] >= len(chosen):
+                    progress["epoch"], progress["cursor"] = progress["epoch"] + 1, 0
+                order = torch.randperm(
+                    len(chosen), generator=torch.Generator().manual_seed(seed + progress["epoch"])
+                ).tolist()
+                start = progress["cursor"]
+                indices = order[start : start + training["batch_size"]]
+                batches.append(collate([chosen[index] for index in indices]))
+                progress["cursor"] += len(indices)
         metrics = train_step(
             model,
             batches,
@@ -345,35 +714,76 @@ def smoke(
             dtype,
             training["stop_weight"],
             training["grad_clip"],
+            tasks,
+            {task: training.get("task_weights", {}).get(task, 1.0) for task in training["tasks"]},
         )
         if not all(math.isfinite(value) for value in metrics.values()) or metrics["grad_norm"] <= 0:
-            raise RuntimeError("Smoke 需要有限损失和非零梯度。")
+            raise RuntimeError("训练步骤需要有限损失和非零梯度。")
         if metrics["optimizer_updated"] != 1:
-            raise RuntimeError("Smoke 优化器没有更新。")
+            raise RuntimeError("优化器没有更新；保存上一有效 Checkpoint 后检查 AMP。")
+        for name, param in model.named_parameters():
+            if param.grad is not None:
+                if not param.requires_grad or not param.grad.isfinite().all():
+                    raise RuntimeError("冻结参数收到梯度或梯度非有限。")
+                group = parameter_group(name)
+                gradient_groups[group] = max(
+                    gradient_groups.get(group, 0), float(param.grad.abs().max())
+                )
         scheduler.step()
         progress["step"] += 1
         progress["scheduler"] = scheduler.state_dict()
-        row = dict(step=progress["step"], learning_rate=scheduler.get_last_lr()[0], **metrics)
+        row = dict(
+            step=progress["step"], learning_rate=scheduler.get_last_lr()[0], tasks=tasks, **metrics
+        )
         rows.append(row)
         with (run_dir / "metrics.jsonl").open("a") as stream:
             stream.write(json.dumps(row) + "\n")
         print(json.dumps(row), flush=True)
 
+        # 验证与最佳状态都在 optimizer 边界；恢复沿用 patience 和调度器进度。
+        if modern and progress["step"] % training["eval_interval"] == 0:
+            scores = task_evaluation(model, validation, training)
+            if not math.isfinite(scores["total"]):
+                raise RuntimeError("验证 Loss 非有限。")
+            progress["evaluations"].append(dict(step=progress["step"], **scores))
+            if scores["total"] < progress["best_loss"] - training["min_delta"]:
+                progress.update(
+                    best_loss=scores["total"], bad_evaluations=0, best_step=progress["step"]
+                )
+                save_checkpoint(
+                    run_dir / f"best-{progress['step']:06d}.pt", model, optimizer, scaler, progress
+                )
+            else:
+                progress["bad_evaluations"] += 1
+        if modern and progress["step"] % training["save_interval"] == 0:
+            save_checkpoint(
+                run_dir / f"step-{progress['step']:06d}.pt", model, optimizer, scaler, progress
+            )
+        if modern and training["patience"] and progress["bad_evaluations"] >= training["patience"]:
+            stop_reason = "early_stopping"
+            break
+        if (
+            modern
+            and training["max_seconds"]
+            and time.perf_counter() - loop_started >= training["max_seconds"]
+        ):
+            stop_reason = "time_budget"
+            break
+    if device == "cuda":
+        torch.cuda.synchronize()
+    loop_seconds = time.perf_counter() - loop_started
+
     frozen_after = parameter_digest(model, frozen=True)
     trainable_after = parameter_digest(model, frozen=False)
     if frozen_before != frozen_after or trainable_before == trainable_after:
         raise RuntimeError("冻结参数变化或目标参数未更新。")
-    save_checkpoint(run_dir / f"step-{progress['step']:06d}.pt", model, optimizer, scaler, progress)
-    grad_groups = {}
-    for name, param in model.named_parameters():
-        if param.grad is not None:
-            if not param.requires_grad or not param.grad.isfinite().all():
-                raise RuntimeError("冻结参数收到梯度或梯度非有限。")
-            group = parameter_group(name)
-            grad_groups[group] = max(grad_groups.get(group, 0), float(param.grad.abs().max()))
+    checkpoint_path = run_dir / f"step-{progress['step']:06d}.pt"
+    if not checkpoint_path.exists():
+        save_checkpoint(checkpoint_path, model, optimizer, scaler, progress)
     result = dict(
         status="passed",
-        scope="R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+        scope="本地/显式运行的 SFT 工程验证；不代表正式 G4 或音质通过",
+        command=command,
         model_kind=settings["model"]["kind"],
         device=device,
         dtype=training["dtype"],
@@ -386,34 +796,111 @@ def smoke(
         tasks=training["tasks"],
         start_step=start_step,
         step=progress["step"],
+        stop_reason=stop_reason,
         resume_from=str(resume) if resume else None,
         frozen_before=frozen_before,
         frozen_after=frozen_after,
         trainable_before=trainable_before,
         trainable_after=trainable_after,
-        gradient_groups=grad_groups,
+        gradient_groups=gradient_groups,
         metrics=rows,
-        data_manifest_sha256=digest(manifest_path),
-        checkpoint=str(run_dir / f"step-{progress['step']:06d}.pt"),
+        data_manifest_sha256=identity["data_manifest_sha256"],
+        checkpoint=str(checkpoint_path),
+        checkpoint_sha256=digest(checkpoint_path),
         elapsed_seconds=time.perf_counter() - started,
+        loop_seconds=loop_seconds,
+        seconds_per_step=loop_seconds / len(rows),
+        timing_scope="optimizer loop including validation and checkpoint IO",
         git_commit=subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=root, text=True
         ).strip(),
-        source_sha256={
-            name: digest(root / name)
-            for name in (
-                "omni/training/r3_local.py",
-                "omni/training/sft.py",
-                "omni/training/losses.py",
-                "omni/models/model_omni_v2.py",
-                "omni/models/thinker/qwen_backend.py",
-                "omni/models/talker/model_talker.py",
-                "omni/models/thinker/model_thinker.py",
-                "omni/data/r3_prepare.py",
-                "omni/data/qwen_omni.py",
-            )
-        },
+        source_sha256=identity["source_sha256"],
+        asset_identity=adapter_identity(settings, contract),
+        data_contract=contract,
     )
-    result["checkpoint_sha256"] = digest(Path(result["checkpoint"]))
+    if modern:
+        result.update(
+            initial_train_probe=initial_probe,
+            final_train_probe=task_evaluation(model, probe, training),
+            validation=task_evaluation(model, validation, training),
+            evaluations=progress["evaluations"],
+            best_step=progress["best_step"],
+            best_validation_loss=progress["best_loss"] if progress["best_step"] else None,
+        )
+        export_adapter(run_dir / "adapter.pt", model, adapter_identity(settings, contract))
+        result["adapter"] = str(run_dir / "adapter.pt")
+        loss_curve(run_dir / "loss.svg", rows, progress["evaluations"])
+    if device == "cuda":
+        result["cuda"] = dict(
+            device=torch.cuda.get_device_name(),
+            peak_allocated_bytes=torch.cuda.max_memory_allocated(),
+            peak_reserved_bytes=torch.cuda.max_memory_reserved(),
+        )
     (run_dir / "manifest.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    return result
+
+
+def evaluate_run(
+    settings: dict, root: Path, run_dir: Path, checkpoint: Path, *, demo: bool = False
+) -> dict:
+    from omni.data.r3_prepare import load_prepared
+    from omni.evaluation.sft import generate_audio, load_local_asr, modality_swap
+    from omni.training.sft import move_batch
+
+    if run_dir.exists():
+        raise FileExistsError(run_dir)
+    check_device(settings["training"])
+    contract = data_contract(settings, root)
+    samples = load_prepared(root / settings["data"]["cache_dir"], "validation", contract)
+    payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
+    if payload["progress"]["identity"] != run_identity(settings, root):
+        raise ValueError("评估配置、代码或数据与 Checkpoint 不一致。")
+    torch.manual_seed(settings["training"]["seed"])
+    model = build_model(settings, root).to(settings["training"]["device"])
+    model.load_state_dict(payload["model"], strict=True)
+    del payload
+    run_dir.mkdir(parents=True, exist_ok=False)
+    result = dict(
+        checkpoint=str(checkpoint),
+        split="validation",
+        metrics=task_evaluation(model, samples, settings["training"]),
+        modality_swap={},
+    )
+    collate = OmniCollator(model.config)
+    for task, kind in (("i2t", "image"), ("a2t", "audio")):
+        rows = [row for row in samples if row["task"] == task]
+        if task in settings["training"]["tasks"] and rows:
+            result["modality_swap"][kind] = modality_swap(
+                model, move_batch(collate(rows[:2]), settings["training"]["device"]), kind
+            )
+    if demo:
+        from transformers import AutoTokenizer, MimiModel
+
+        from omni.inference.codec import MimiCodec
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            root / settings["assets"]["qwen_dir"], local_files_only=True
+        )
+        codec = MimiCodec(
+            MimiModel.from_pretrained(
+                root / settings["assets"]["reference_root"] / "model/mimi", local_files_only=True
+            )
+        )
+        config = settings.get("evaluation", {})
+        asr = load_local_asr(root / config["asr_dir"]) if config.get("asr_dir") else None
+        sample = next((row for row in samples if row["task"] == "t2a"), None)
+        if sample is None:
+            raise ValueError("音频 demo 需要验证集 T2A 样本。")
+        result["generation"] = generate_audio(
+            model,
+            tokenizer,
+            sample,
+            codec,
+            run_dir / "audio",
+            config.get("max_new_tokens", 128),
+            asr,
+        )
+    (run_dir / "evaluation.json").write_text(
+        json.dumps(result, ensure_ascii=False, indent=2) + "\n"
+    )
     return result

@@ -1,0 +1,8 @@
+# R4-C：仅训练 Vision Projector，梯度穿过冻结 Qwen。
+extends: r4a_local.yaml
+training:
+  recipe: vision
+  tasks: [i2t]
+  steps: 4
+  learning_rate: 0.001
+  accumulation_steps: 1

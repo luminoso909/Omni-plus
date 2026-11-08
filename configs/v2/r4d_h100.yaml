@@ -1,0 +1,14 @@
+# 云端待验收：10-step pilot；正式步数及数据需 G3 后显式修改。
+extends: r4d_local.yaml
+model:
+  kind: qwen3
+training:
+  device: cuda
+  dtype: bfloat16
+  steps: 10
+  learning_rate: 0.0001
+  allow_diagnostic_a2a: false
+  group_lrs:
+    lora: 2.0e-05
+    vision_proj: 0.0001
+    audio_proj: 0.0001
