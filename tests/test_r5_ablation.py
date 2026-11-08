@@ -90,7 +90,9 @@ def matrix_fixture(tmp_path: Path, monkeypatch) -> tuple[Path, dict]:
     identities = dict(
         initialization_sha256={},
         model_config_sha256="config hash",
+        source_schema_version=bridge_ablation.SOURCE_SCHEMA_VERSION,
         source_sha256={"bridge.py": "source hash"},
+        runtime={"torch": "fixture-torch", "transformers": "fixture-hf"},
         asset_identity={"qwen_revision": "fixture"},
     )
     contract = {"kind": "fixture"}
@@ -128,30 +130,46 @@ def matrix_fixture(tmp_path: Path, monkeypatch) -> tuple[Path, dict]:
     return output / "matrix.json", identities
 
 
-def write_completed(matrix: dict, identities: dict, run_id: str, mismatch: str | None) -> None:
+def write_completed(
+    matrix: dict,
+    identities: dict,
+    run_id: str,
+    mismatch: str | None,
+    *,
+    start_step: int = 0,
+    cuda: bool = False,
+) -> None:
     entry = matrix["candidates"][run_id]
     train_dir, benchmark_dir = Path(entry["train"]), Path(entry["benchmark"])
     train_dir.mkdir(parents=True)
     benchmark_dir.mkdir(parents=True)
     common = identities | dict(
-        config=entry["config"], checkpoint_sha256=f"weights-{run_id}", hardware={"device": "cpu"}
+        config=entry["config"],
+        checkpoint_sha256=f"weights-{run_id}",
+        hardware={"device": "cuda" if cuda else "cpu"},
     )
     train = common | dict(
         status="passed",
         step=2,
+        start_step=start_step,
+        loop_seconds=4.0,
+        seconds_per_step=4.0 / (2 - start_step),
+        timing_scope="optimizer loop including validation and checkpoint IO",
         parameter_groups={"bridge": {"total": 5, "trainable": 5}},
         validation={"total": 1.0},
         gradient_groups={"bridge": 0.5},
         evaluations=[],
     )
+    if cuda:
+        train["cuda"] = dict(peak_allocated_bytes=1000, peak_reserved_bytes=2000)
     metrics = dict(
-        protocol={"max_new_tokens": 8},
+        protocol={"max_new_tokens": 8, "timing": "full model stream"},
         sample_ids=["heldout-1"],
         samples=[{"record_id": "heldout-1", "status": "generated"}],
         failed_samples=0,
         truncated_samples=1,
         median_stream_seconds=0.1,
-        cuda_peak_allocated_bytes=None,
+        cuda_peak_allocated_bytes=500 if cuda else None,
         asr_measured_samples=0,
         cer=None,
         wer=None,
@@ -161,6 +179,12 @@ def write_completed(matrix: dict, identities: dict, run_id: str, mismatch: str |
     )
     if mismatch == "checkpoint":
         evaluation["checkpoint_sha256"] = "another checkpoint"
+    elif mismatch == "source":
+        train["source_sha256"] = {"bridge.py": "another source hash"}
+    elif mismatch == "source_schema":
+        evaluation.pop("source_schema_version")
+    elif mismatch == "runtime":
+        train["runtime"] = common["runtime"] | {"transformers": "another HF version"}
     elif mismatch == "hardware":
         train["hardware"] = evaluation["hardware"] = {"device": "different cpu"}
     elif mismatch == "sample":
@@ -177,6 +201,9 @@ def write_completed(matrix: dict, identities: dict, run_id: str, mismatch: str |
     [
         (None, "passed"),
         ("checkpoint", "invalid"),
+        ("source", "invalid"),
+        ("source_schema", "invalid"),
+        ("runtime", "invalid"),
         ("hardware", "passed"),
         ("sample", "invalid"),
         ("generated", "failed"),
@@ -199,3 +226,58 @@ def test_collect_checks_fairness_and_preserves_results(
     assert json.loads((output / "summary.json").read_text()) == result
     with pytest.raises(FileExistsError):
         bridge_ablation.collect(path, output)
+
+
+def test_collect_legacy_tiny_is_diagnostic_only(tmp_path: Path, monkeypatch) -> None:
+    path, identities = matrix_fixture(tmp_path, monkeypatch)
+    matrix = json.loads(path.read_text())
+    matrix["schema_version"] = 1
+    for key in ("source_schema_version", "runtime"):
+        del matrix[key], identities[key]
+    path.write_text(json.dumps(matrix))
+    for run_id in matrix["candidates"]:
+        write_completed(matrix, identities, run_id, None)
+    result = bridge_ablation.collect(path, tmp_path / "legacy")
+    assert not result["comparable"]
+    assert all(row["status"] == "passed" for row in result["runs"])
+    assert "历史 Tiny" in result["fairness_failure"]
+
+    for entry in matrix["candidates"].values():
+        entry["config"]["model"]["kind"] = "qwen3"
+    path.write_text(json.dumps(matrix))
+    with pytest.raises(ValueError, match="原生 Qwen 需要重新规划"):
+        bridge_ablation.collect(path, tmp_path / "legacy-native")
+
+
+@pytest.mark.parametrize("cuda,start_step", [(False, 0), (True, 1)])
+def test_collect_exports_separate_costs_and_training_segment(
+    tmp_path: Path, monkeypatch, cuda: bool, start_step: int
+) -> None:
+    path, identities = matrix_fixture(tmp_path, monkeypatch)
+    matrix = json.loads(path.read_text())
+    for run_id in matrix["candidates"]:
+        write_completed(matrix, identities, run_id, None, start_step=start_step, cuda=cuda)
+
+    output = tmp_path / "summary"
+    result = bridge_ablation.collect(path, output)
+    assert result["comparable"]
+    expected = dict(
+        training_start_step=start_step,
+        training_end_step=2,
+        training_update_count=2 - start_step,
+        training_loop_seconds=4.0,
+        training_seconds_per_step=4.0 / (2 - start_step),
+        training_timing_scope="optimizer loop including validation and checkpoint IO",
+        training_peak_allocated_bytes=1000 if cuda else None,
+        training_peak_reserved_bytes=2000 if cuda else None,
+        inference_median_stream_seconds=0.1,
+        inference_timing_scope="full model stream",
+        inference_peak_allocated_bytes=500 if cuda else None,
+    )
+    json_row = json.loads((output / "summary.json").read_text())["runs"][0]
+    assert {key: json_row[key] for key in expected} == expected
+    with (output / "summary.csv").open() as stream:
+        csv_row = next(csv.DictReader(stream))
+    assert {key: csv_row[key] for key in expected} == {
+        key: "" if value is None else str(value) for key, value in expected.items()
+    }

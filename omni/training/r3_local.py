@@ -21,12 +21,8 @@ from omni.models.bridge import bridge_spec
 from omni.models.config import OmniPlusConfig
 from omni.models.model_omni_v2 import OmniPlusOmni
 from omni.models.thinker.qwen_backend import QwenBackend
+from omni.training.run_source import digest, source_identity
 from omni.training.sft import load_checkpoint, save_checkpoint, train_step
-
-
-def digest(path: Path) -> str:
-    with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def merge_settings(path: Path, parents: tuple[Path, ...] = ()) -> dict:
@@ -235,7 +231,7 @@ def validate_r4(settings: dict, root: Path) -> None:
         "vision_checkpoint",
         "audio_checkpoint",
     }
-    bridge_sources = {"bridge_base_checkpoint", "bridge_base_manifest"}
+    bridge_sources = {"bridge_base_checkpoint", "bridge_base_manifest", "bridge_base_lineage"}
     if set(initial) - {
         "talker",
         *checkpoints,
@@ -249,6 +245,11 @@ def validate_r4(settings: dict, root: Path) -> None:
     has_base = bool(initial.get("bridge_base_checkpoint"))
     if has_base != bool(initial.get("bridge_base_manifest")):
         raise ValueError("Bridge 热启动需要同时指定 Fixed Checkpoint 和对应 run Manifest。")
+    has_lineage = bool(initial.get("bridge_base_lineage"))
+    if (has_lineage and not has_base) or (
+        has_base and settings["model"]["kind"] == "qwen3" and not has_lineage
+    ):
+        raise ValueError("原生 Bridge 热启动需要 B1 数据谱系 bridge_base_lineage。")
     if has_base and any(initial.get(key) for key in checkpoints):
         raise ValueError("Bridge 热启动不能与独立组件初始化混用。")
     for key in sorted(checkpoints | bridge_sources):
@@ -411,13 +412,13 @@ def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
                 value.copy_(values[name])
 
 
-def initialize_bridge_base(
-    model: OmniPlusOmni, settings: dict, root: Path, contract: dict, source_sha: dict
-) -> None:
-    """从同一个 Fixed 训练结果导入共享权重，融合参数保留本候选初始化。"""
+def read_bridge_base(settings: dict, root: Path, contract: dict, source_sha: dict) -> dict | None:
+    """在矩阵规划和权重导入前核验同一份来源和数据谱系。"""
+    from omni.data.bridge_splits import check_bridge_splits
+
     initial = settings["model"].get("initialization", {})
     if not initial.get("bridge_base_checkpoint"):
-        return
+        return None
     manifest = json.loads((root / initial["bridge_base_manifest"]).read_text())
     if manifest.get("checkpoint_sha256") != source_sha["bridge_base_checkpoint"]:
         raise ValueError("Bridge 热启动 Checkpoint 与来源 Manifest 的 SHA-256 不一致。")
@@ -439,10 +440,31 @@ def initialize_bridge_base(
     if (
         not source_settings
         or source_settings != manifest.get("config")
+        or not identity.get("data_manifest_sha256")
         or identity["data_manifest_sha256"] != manifest.get("data_manifest_sha256")
     ):
         raise ValueError("Bridge 热启动需要与 Manifest 匹配的完整训练 Checkpoint。")
 
+    lineage = initial.get("bridge_base_lineage")
+    check_bridge_splits(
+        contract,
+        identity,
+        source_sha["bridge_base_checkpoint"],
+        root / lineage if lineage else None,
+        formal=settings["model"]["kind"] == "qwen3",
+        source_contract=manifest["data_contract"],
+    )
+    return payload
+
+
+def initialize_bridge_base(
+    model: OmniPlusOmni, settings: dict, root: Path, contract: dict, source_sha: dict
+) -> None:
+    """从同一个 Fixed 训练结果导入共享权重，融合参数保留本候选初始化。"""
+    payload = read_bridge_base(settings, root, contract, source_sha)
+    if payload is None:
+        return
+    source_settings = payload["progress"]["identity"]["settings"]
     source = dict(payload["config"])
     target = model.config.to_dict()
     source_bridge = bridge_spec(OmniPlusConfig(**source))
@@ -558,37 +580,25 @@ def optimizer_state(model: nn.Module, settings: dict) -> tuple:
 
 
 def run_identity(settings: dict, root: Path) -> dict:
-    files = (
-        "omni/training/r3_local.py",
-        "omni/training/sft.py",
-        "omni/training/losses.py",
-        "omni/models/bridge.py",
-        "omni/models/model_omni_v2.py",
-        "omni/models/thinker/qwen_backend.py",
-        "omni/models/talker/model_talker.py",
-        "omni/models/thinker/model_thinker.py",
-        "omni/data/r3_prepare.py",
-        "omni/data/qwen_omni.py",
-    )
-    if settings["schema_version"] == 2:
-        files += ("omni/training/adapters.py", "omni/evaluation/sft.py", "omni/data/sft_sources.py")
     bridge_identity = {}
     if "bridge" in settings["model"] or settings["model"].get("initialization", {}).get(
         "bridge_base_checkpoint"
     ):
         bridge_identity["model_config_sha256"] = digest(root / settings["model"]["config"])
-    if bridge_identity or "benchmark" in settings.get("evaluation", {}):
-        files += ("omni/evaluation/bridge_benchmark.py",)
     return dict(
         settings=settings,
         data_manifest_sha256=digest(root / settings["data"]["cache_dir"] / "manifest.json"),
         initialization_sha256={
             name: digest(root / value)
             for name, value in settings["model"].get("initialization", {}).items()
-            if (name.endswith("_checkpoint") or name == "bridge_base_manifest") and value
+            if (
+                name.endswith("_checkpoint")
+                or name in {"bridge_base_manifest", "bridge_base_lineage"}
+            )
+            and value
         },
         runtime=dict(torch=str(torch.__version__), transformers=transformers.__version__),
-        source_sha256={name: digest(root / name) for name in files},
+        **source_identity(root),
         **bridge_identity,
     )
 
@@ -924,7 +934,9 @@ def smoke(
         git_commit=subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=root, text=True
         ).strip(),
+        source_schema_version=identity["source_schema_version"],
         source_sha256=identity["source_sha256"],
+        runtime=identity["runtime"],
         asset_identity=adapter_identity(settings, contract),
         data_contract=contract,
     )
@@ -1011,7 +1023,9 @@ def evaluate_run(
             data_manifest_sha256=identity["data_manifest_sha256"],
             initialization_sha256=identity["initialization_sha256"],
             model_config_sha256=identity.get("model_config_sha256"),
+            source_schema_version=identity["source_schema_version"],
             source_sha256=identity["source_sha256"],
+            runtime=identity["runtime"],
             hardware=hardware_info(settings["training"]["device"]),
             asset_identity=adapter_identity(settings, contract),
         )

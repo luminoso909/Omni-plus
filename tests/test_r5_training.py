@@ -14,6 +14,7 @@ from omni.data import r3_prepare
 from omni.training import r3_local
 from omni.training.adapters import load_adapter
 from omni.training.sft import save_checkpoint
+from scripts import bridge_ablation
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = {
@@ -50,7 +51,9 @@ def fixture_settings(tmp_path: Path) -> dict:
     return config
 
 
-def fixed_source(config: dict, tmp_path: Path) -> tuple[Path, Path, dict]:
+def fixed_source(
+    config: dict, tmp_path: Path, contract: dict = CONTRACT
+) -> tuple[Path, Path, dict]:
     torch.manual_seed(config["training"]["seed"])
     model = r3_local.build_model(config, ROOT)
     optimizer, _, scaler, _ = r3_local.optimizer_state(model, config)
@@ -67,10 +70,10 @@ def fixed_source(config: dict, tmp_path: Path) -> tuple[Path, Path, dict]:
         json.dumps(
             dict(
                 config=config,
-                asset_identity=r3_local.adapter_identity(config, CONTRACT),
+                asset_identity=r3_local.adapter_identity(config, contract),
                 checkpoint_sha256=r3_local.digest(checkpoint),
                 data_manifest_sha256=identity["data_manifest_sha256"],
-                data_contract=CONTRACT,
+                data_contract=contract,
             )
         )
     )
@@ -146,6 +149,51 @@ def test_warm_start_rejects_incompatible_source(
             model, fixture_settings, ROOT, contract, identity["initialization_sha256"]
         )
     assert_nested_equal(before, model.state_dict())
+
+
+def test_leaked_media_rejected_by_plan_and_warm_start(
+    fixture_settings: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    row = dict(
+        task="t2a", record_id="original", group_id="original-group", media_ids=["sha256:voice"]
+    )
+    source = CONTRACT | {"records": [row | {"split": "train"}]}
+    checkpoint, manifest, _ = fixed_source(fixture_settings, tmp_path, source)
+    fixture_settings["model"]["initialization"] = dict(
+        bridge_base_checkpoint=str(checkpoint), bridge_base_manifest=str(manifest)
+    )
+    heldout = row | {"split": "test", "record_id": "alias", "group_id": "different-group"}
+    contract = CONTRACT | {"records": [heldout]}
+    model = r3_local.build_model(fixture_settings, ROOT)
+    before = {name: value.clone() for name, value in model.state_dict().items()}
+    identity = r3_local.run_identity(fixture_settings, ROOT)
+    with pytest.raises(ValueError, match="留出集冲突"):
+        r3_local.initialize_bridge_base(
+            model, fixture_settings, ROOT, contract, identity["initialization_sha256"]
+        )
+    assert_nested_equal(before, model.state_dict())
+
+    split_file = tmp_path / "test.pt"
+    split_file.write_bytes(b"fixture split")
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            dict(
+                contract=contract,
+                files={split_file.name: r3_local.digest(split_file)},
+                selections={"test": [heldout]},
+            )
+        )
+    )
+    fixture_settings["evaluation"]["benchmark"] = {"split": "test", "t2a_samples": 1}
+    base = tmp_path / "base.yaml"
+    base.write_text(yaml.safe_dump(fixture_settings))
+    candidates = tmp_path / "candidates.yaml"
+    candidates.write_text("fixed: {kind: fixed, layers: [0]}\nlast: {kind: last, layers: [1]}\n")
+    output = tmp_path / "matrix"
+    monkeypatch.setattr(bridge_ablation, "data_contract", lambda *_: contract)
+    with pytest.raises(ValueError, match="留出集冲突"):
+        bridge_ablation.plan(base, candidates, output, ROOT)
+    assert not output.exists()
 
 
 def test_components_rejects_last_with_fixed_keys(fixture_settings: dict, tmp_path: Path) -> None:

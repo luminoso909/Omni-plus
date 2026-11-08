@@ -13,11 +13,14 @@ from omni.training.r3_local import (
     build_model,
     data_contract,
     digest,
+    read_bridge_base,
     read_settings,
     run_identity,
 )
+from omni.training.run_source import SOURCE_SCHEMA_VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_FIELDS = ("source_schema_version", "source_sha256", "runtime")
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -75,9 +78,10 @@ def plan(base_path: Path, candidates_path: Path, output: Path, root: Path = ROOT
         raise ValueError("准备缓存缺少足够独立留出 T2A 样本。")
 
     identity = run_identity(settings, root)
+    read_bridge_base(settings, root, contract, identity["initialization_sha256"])
     asr_dir = settings["evaluation"].get("asr_dir")
     matrix = dict(
-        schema_version=1,
+        schema_version=2,
         scope="tiny_diagnostic" if base["model"]["kind"] == "tiny" else "planned_ablation",
         base_config=str(base_path),
         candidates_source=str(candidates_path),
@@ -85,7 +89,7 @@ def plan(base_path: Path, candidates_path: Path, output: Path, root: Path = ROOT
         data_manifest_sha256=identity["data_manifest_sha256"],
         initialization_sha256=identity["initialization_sha256"],
         model_config_sha256=identity["model_config_sha256"],
-        source_sha256=identity["source_sha256"],
+        **{key: identity[key] for key in SOURCE_FIELDS},
         asset_identity=adapter_identity(settings, contract),
         asr_assets=asr_identity(root / asr_dir if asr_dir else None),
         split=split,
@@ -104,6 +108,7 @@ def completed_row(matrix: dict, entry: dict) -> dict:
     evaluation = json.loads((Path(entry["benchmark"]) / "evaluation.json").read_text())
     benchmark = evaluation["benchmark"]
     budget = entry["config"]["training"]["steps"]
+    source_fields = SOURCE_FIELDS if matrix["schema_version"] == 2 else ("source_sha256",)
     for document in (train, evaluation):
         if document["config"] != entry["config"]:
             raise ValueError("实测配置与矩阵不一致。")
@@ -112,7 +117,7 @@ def completed_row(matrix: dict, entry: dict) -> dict:
             "data_manifest_sha256",
             "initialization_sha256",
             "model_config_sha256",
-            "source_sha256",
+            *source_fields,
         ):
             if document[field] != matrix[field]:
                 raise ValueError(f"实测版本与矩阵不一致：{field}")
@@ -143,12 +148,27 @@ def completed_row(matrix: dict, entry: dict) -> dict:
     ):
         raise ValueError("Benchmark 生成预算与矩阵不一致。")
 
+    start_step = train["start_step"]
+    if type(start_step) is not int or not 0 <= start_step < budget:
+        raise ValueError("训练记录的本段更新区间无效。")
+    cuda = train.get("cuda", {})
     counts = train["parameter_groups"]
     return dict(
         status="failed" if failures else "passed",
         reason="有生成失败样本" if failures else None,
         failures=failures,
         steps=train["step"],
+        training_start_step=start_step,
+        training_end_step=train["step"],
+        training_update_count=train["step"] - start_step,
+        training_loop_seconds=train["loop_seconds"],
+        training_seconds_per_step=train["seconds_per_step"],
+        training_timing_scope=train["timing_scope"],
+        training_peak_allocated_bytes=cuda.get("peak_allocated_bytes"),
+        training_peak_reserved_bytes=cuda.get("peak_reserved_bytes"),
+        inference_median_stream_seconds=benchmark["median_stream_seconds"],
+        inference_timing_scope=benchmark["protocol"]["timing"],
+        inference_peak_allocated_bytes=benchmark["cuda_peak_allocated_bytes"],
         trainable_parameters=sum(group["trainable"] for group in counts.values()),
         bridge_parameters=counts["bridge"]["total"],
         validation_loss=train["validation"]["total"],
@@ -164,8 +184,6 @@ def completed_row(matrix: dict, entry: dict) -> dict:
             for key in (
                 "failed_samples",
                 "truncated_samples",
-                "median_stream_seconds",
-                "cuda_peak_allocated_bytes",
                 "asr_measured_samples",
                 "cer",
                 "wer",
@@ -179,8 +197,19 @@ def collect(matrix_path: Path, output: Path, overrides: dict | None = None) -> d
         raise FileExistsError(output)
     matrix = json.loads(matrix_path.read_text())
     candidates = matrix["candidates"]
-    if matrix["schema_version"] != 1 or len(candidates) < 2:
+    version = matrix["schema_version"]
+    if version not in (1, 2) or len(candidates) < 2:
         raise ValueError("不支持的矩阵版本或候选数量。")
+    native = any(entry["config"]["model"]["kind"] == "qwen3" for entry in candidates.values())
+    if version == 1 and native:
+        raise ValueError("历史矩阵缺少完整源码及 B1 谱系身份，原生 Qwen 需要重新规划。")
+    if version == 2 and (
+        matrix.get("source_schema_version") != SOURCE_SCHEMA_VERSION
+        or not matrix.get("source_sha256")
+        or not matrix.get("runtime")
+        or (native and not matrix.get("initialization_sha256", {}).get("bridge_base_lineage"))
+    ):
+        raise ValueError("矩阵缺少完整源码、运行时或 B1 谱系身份。")
     shared = []
     for entry in candidates.values():
         config = entry["config"]
@@ -226,8 +255,14 @@ def collect(matrix_path: Path, output: Path, overrides: dict | None = None) -> d
         )
 
     common = all(row["status"] == "passed" for row in rows)
-    comparable = common and all(
-        row[key] == rows[0][key] for row in rows for key in ("hardware", "asr_assets", "protocol")
+    comparable = (
+        version == 2
+        and common
+        and all(
+            row[key] == rows[0][key]
+            for row in rows
+            for key in ("hardware", "asr_assets", "protocol")
+        )
     )
     result = dict(
         scope=matrix["scope"],
@@ -237,6 +272,8 @@ def collect(matrix_path: Path, output: Path, overrides: dict | None = None) -> d
         fairness_failure=(
             None
             if comparable
+            else "历史 Tiny 矩阵仅供诊断，缺少完整源码身份"
+            if version == 1
             else "硬件、ASR 或协议不一致"
             if common
             else "有失败、无效或缺失的实验"
@@ -255,8 +292,17 @@ def collect(matrix_path: Path, output: Path, overrides: dict | None = None) -> d
         "bridge_parameters",
         "validation_loss",
         "heldout_loss",
-        "median_stream_seconds",
-        "cuda_peak_allocated_bytes",
+        "training_start_step",
+        "training_end_step",
+        "training_update_count",
+        "training_loop_seconds",
+        "training_seconds_per_step",
+        "training_timing_scope",
+        "training_peak_allocated_bytes",
+        "training_peak_reserved_bytes",
+        "inference_median_stream_seconds",
+        "inference_timing_scope",
+        "inference_peak_allocated_bytes",
         "failed_samples",
         "truncated_samples",
         "asr_measured_samples",

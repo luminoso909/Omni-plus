@@ -4,15 +4,15 @@ R5-L 提供 Fixed、Last、Weighted、Gated 的本地实现和实验入口。G5 
 
 | 输入 | 固定项 |
 | --- | --- |
-| 代码与环境 | R5 实现提交、Python 3.12、同一驱动和 PyTorch/CUDA/Transformers 版本 |
-| B1 | 一份 Fixed Bridge 完整 Checkpoint 及同 run 的 `manifest.json`，SHA 匹配 |
+| 代码与环境 | R5 审查修复提交、Python 3.12、同一驱动和 PyTorch/CUDA/Transformers 版本 |
+| B1 | Fixed 完整 Checkpoint、对应运行清单、各继承组件的 Checkpoint 和原始缓存清单 |
 | 资产 | Qwen3-1.7B revision、Tokenizer/模板、SenseVoice、SigLIP2、Mimi |
 | 训练 | 同一任务、split、媒体缓存、Seed、初始化、更新范围、LR 与 optimizer step 预算 |
 | 评测 | 相同 validation/test 数据、样本数量、贪心生成预算、ASR 和设备 |
 
 ## 二、固定代码与环境
 
-将审查交接中的实现 SHA 填入 `R5_COMMIT`。若远程尚未包含该提交，先由仓库负责人发布对应提交或搬运 Git bundle。
+将包含 [审查修复](../reviews/R5-L_REVIEW_FIXES.md) 的提交 SHA 填入 `R5_COMMIT`。若远程尚未包含该提交，先由仓库负责人发布对应提交或搬运 Git bundle。
 
 ```bash
 git clone https://github.com/luminoso909/Omni-plus.git
@@ -34,6 +34,20 @@ nvidia-smi
 
 使用审计 JSONL 和固定 split，按许可与预算准备 G5 数据。所有候选共用同一缓存。保留独立 Test，仅在协议与训练预算锁定后用于汇总。联合训练包含问答式 A2A 时，仍须提供可信 QA 目标录音。数据格式和准备规则见 [G4 操作说明](G4_SFT_RUNBOOK.md)。
 
+将 B1 及每个递归继承组件当时的缓存 `manifest.json` 原样归档。用 `shasum -a 256` 读取各 Checkpoint 的摘要，在 `outputs/g5/b1/lineage.json` 中以完整摘要为键登记。路径相对 `lineage.json`。下面的键是占位符，B1 主 Checkpoint 由训练配置指定。
+
+```json
+{
+  "B1_CHECKPOINT_SHA256": {"cache_manifest": "b1-cache/manifest.json"},
+  "COMPONENT_CHECKPOINT_SHA256": {
+    "checkpoint": "parents/component.pt",
+    "cache_manifest": "parents/component-cache/manifest.json"
+  }
+}
+```
+
+`plan` 和热启动都依据 Checkpoint 内的摘要核对清单，并按已记录的媒体 ID、内容摘要、文本身份与分组检查 split。B1 训练数据必须留在 G5 训练侧，B1 验证数据不得进入 G5 Test，封存 Test 保持原角色。正式矩阵要求所有来源具有审计数据契约，缺少继承证据时须找回对应原始清单及 Checkpoint。
+
 在 `outputs/g5/configs/base.yaml` 创建派生配置。以下路径和摘要为待填值。任务、训练预算和 B1 的 LoRA 配置由 G3/G4 实测确定。
 
 ```yaml
@@ -42,6 +56,7 @@ model:
   initialization:
     bridge_base_checkpoint: outputs/g5/b1/step-XXXXXX.pt
     bridge_base_manifest: outputs/g5/b1/manifest.json
+    bridge_base_lineage: outputs/g5/b1/lineage.json
 data:
   audited_manifest: outputs/g5/data/audited.jsonl
   audited_manifest_sha256: 填写实际SHA256
@@ -80,7 +95,7 @@ python scripts/run_experiment.py train --config "$CFG" --run-dir "$RUN/train" > 
 python scripts/run_experiment.py resume --config "$CFG" --resume "$RUN/train/step-000004.pt" --steps 10 --run-dir "$RUN/resumed" > "$RUN/resume.log" 2>&1
 ```
 
-Checkpoint 身份校验覆盖源码、配置、数据及初始化文件哈希。若版本或设备变化，保留失败记录并从获批的共同 B1 开启新矩阵。定期将权重、日志、配置和清单备份到私有持久卷，使用文件校验确认回传完整。
+Checkpoint 身份校验覆盖 `omni` Python 源码、两个实验 CLI、运行时、配置、数据及初始化文件哈希。历史 Checkpoint 的严格恢复在原提交执行。若版本或设备变化，保留失败记录并从获批的共同 B1 开启新矩阵。定期将权重、日志、配置和清单备份到私有持久卷，使用文件校验确认回传完整。
 
 ## 五、统一 Benchmark 与导出
 
@@ -92,3 +107,5 @@ python scripts/bridge_ablation.py collect --matrix "$MATRIX/matrix.json" --outpu
 ```
 
 对恢复后的运行，在 `collect --artifacts` 的 JSON 中显式指定对应训练目录、评测目录和失败日志。保留缺失或失败行并按原因复核。检查候选对照使用相同的 B1 文件 SHA、资产、数据、种子、有效步数、评测集和硬件。记录新增参数和显存/延迟成本，单独保留各 run 的原始 JSON/CSV、训练曲线和失败样本。仅汇总指标与报告进入 Git，原始语音和 Checkpoint 保留于私有目录。
+
+汇总的 `training_*` 记录优化器循环耗时、训练峰值和实际覆盖的 step 区间。恢复运行只计本段成本。`inference_*` 单独记录模型流延迟与推理峰值。历史 Tiny 矩阵可汇总为诊断，正式比较使用新版本矩阵。
