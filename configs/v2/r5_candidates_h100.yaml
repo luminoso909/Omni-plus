@@ -1,0 +1,5 @@
+# 候选模板。待 B1 成立后共同确定正式层号、组数和预算。
+fixed: {kind: fixed, layers: [13]}
+last: {kind: last, layers: [27]}
+weighted: {kind: weighted, layers: [13, 27]}
+gated: {kind: gated, layers: [13, 27]}

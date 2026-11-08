@@ -1,0 +1,98 @@
+{
+  "protected_initial_count": 169,
+  "historic_stage_sha256": {
+    "docs/stages/P5.md": "302dd9b5ba88afc4ed21079af94777b2960052c2b9aa3ce6992c6dc4196537ed",
+    "docs/stages/P0.md": "01ac1cb1d4bad5c2d938fc5ad60f06d68ec49e11060e01442f38e0d31fcd993f",
+    "docs/stages/P1.md": "ecb9052d9162d77d632210c2d5bf18c7ff5b52fcda5fe8a70a6be6df51757473",
+    "docs/stages/P2.md": "b1345c087866ad07026c33f0506d82d5a633e8c3ffb33e1eeb8dbe393cbe04b3",
+    "docs/stages/P3.md": "14ed2a69dd9340f4373ce35b02f750d7fd372cad5dfeedb9777de46aebcf811a",
+    "docs/stages/P4.md": "37b80cf84f4c512ab916cc43a03ae2e761e98a8fa6aabdd3c865ebb01df9040f",
+    "docs/stages/R0.md": "5b75b59d6add730b323534ed4c4d0a098091fe28b0bf9375e9694a2522538bcf",
+    "docs/stages/R1.md": "66460276b21b5ee7cea4e2ab2b525ae3212e7cdaffc201dea821096aac449982",
+    "docs/stages/R2.md": "2a9332dcafaa5ef6de123b43207b4be69ff4b5c077e27c97da5949e390437cf9",
+    "docs/stages/R3-local.md": "65c1f9d75a6c4ba76e8aabbbfd07435c9ee0ec53371fdaeaefc0b4c4b23c53bb",
+    "docs/stages/R4-local.md": "b312ec84b9c629e71c9b84f99d732dba31e60aae59b63eb70651b18360f47bd0"
+  },
+  "historical_sha_matches_r4_evidence": true,
+  "clean_archive": {
+    "baseline": "f3b593f",
+    "base_commit": "f3b593f687d2c6986a41b2acdd5bd8b9e7a4728d",
+    "archive_command": "git archive f3b593f",
+    "root": "/private/tmp/omni-r5-clean-3f__jn0u",
+    "import_omni": "/private/tmp/omni-r5-clean-3f__jn0u/omni/__init__.py",
+    "overlay_sha256": {
+      "omni/models/bridge.py": "1bf1a398e0ced980b6abeaa0e609585e0a2bfb63f2038e298aaa460db9773f70",
+      "omni/models/config.py": "cc592a364d40f4f89dc8c155b4ef8ca764f0aa4d3f7041ee971edb2e051aba8a",
+      "omni/models/model_omni_v2.py": "af5d0b7d8b788bd222f22848a9072e9efacdda38df50b11592ffa24d27d90fd3",
+      "omni/models/thinker/backend.py": "a25a38c41e5ac226f94c472271e4e3252775a5ee1fca1b966b7c103732dba6a3",
+      "omni/models/thinker/qwen_backend.py": "5ecb3c485bcdcc5509553015d75a12b22e5f90341959cd2c3fe4caf12f56b8d2",
+      "omni/training/r3_local.py": "8c33d01799c1a6adce6d9a8e5fc4ecfa1e53527a3add05bef27edd56fab9659f",
+      "omni/evaluation/sft.py": "b6282370f72d8861233bc38f08992f395822942e05951d20676e4587ccd24fbe",
+      "omni/evaluation/bridge_benchmark.py": "66a78f55610c1d90f48fad92304711494e0750824dab7a91b08e416c3b06fc4f",
+      "scripts/bridge_ablation.py": "55609305edfd74911d5945279c033faadb3cca91cd5bc82662a50f1aabfa983a",
+      "tests/test_r5_ablation.py": "51ca71acc68eae1ca15cdd3ce0a11fc8ee556d7bcb44c834e5f523cd6c879450",
+      "tests/test_r5_bridge.py": "93cebe870518a587f3e40fad10aeb5927858fa1835fbba545c645244afb81f4f",
+      "tests/test_r5_training.py": "ccde2728f99afec5c27389d8b73d1789671c883b254c94bd81127954e5b4969d",
+      "configs/v2/r5_candidates_h100.yaml": "a25ea6b6bdaa8ea3b1b7dff1f40b0f5a166c54de35947883ba93fa922ef2d12d",
+      "configs/v2/r5_candidates_local.yaml": "996649925663706e4ee92a5ce8a6e5258b77649d9bd2248ef5f2a12c76731bb0",
+      "configs/v2/r5_h100.yaml": "516e0b682203130a2872c67ba7128fe7c7d5fe5e724d28de1a6cab8319b3f506",
+      "configs/v2/r5_local.yaml": "d0e605cf613fabff89023f81bb87e6efefe52eb98fe2b61a5090bfc818c097ae"
+    },
+    "source_changes_during_acceptance": [],
+    "git_metadata": "Shared .git is read-only, GIT_OPTIONAL_LOCKS=0. Worktree is extracted baseline plus exact overlay.",
+    "results": {
+      "pytest": {
+        "command": "env PYTHONPATH=/private/tmp/omni-r5-clean-3f__jn0u GIT_DIR=/Users/lucius/projects/personal/Omni++/.git GIT_WORK_TREE=/private/tmp/omni-r5-clean-3f__jn0u GIT_OPTIONAL_LOCKS=0 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=2 PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/omni-r5-clean-3f__jn0u/mpl-cache /Users/lucius/projects/personal/Omni++/.venv/bin/python -m pytest -q",
+        "exit_code": 0,
+        "seconds": 32.06,
+        "log_sha256": "1530b3a874dd2cd56f1e92c3b499a67ff2c4f428a7a82f489cb6c92f8d3cf05f",
+        "summary": [
+          "=========================== short test summary info ============================",
+          "SKIPPED [1] tests/test_environment.py:34: MPS unavailable on this host",
+          "262 passed, 1 skipped in 31.45s"
+        ],
+        "passed": 262,
+        "failed": 0,
+        "skipped": 1
+      },
+      "ruff_check": {
+        "command": "env PYTHONPATH=/private/tmp/omni-r5-clean-3f__jn0u GIT_DIR=/Users/lucius/projects/personal/Omni++/.git GIT_WORK_TREE=/private/tmp/omni-r5-clean-3f__jn0u GIT_OPTIONAL_LOCKS=0 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=2 PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/omni-r5-clean-3f__jn0u/mpl-cache /Users/lucius/projects/personal/Omni++/.venv/bin/ruff check omni tests scripts",
+        "exit_code": 0,
+        "seconds": 0.04,
+        "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+        "summary": [
+          "All checks passed!"
+        ]
+      },
+      "ruff_format": {
+        "command": "env PYTHONPATH=/private/tmp/omni-r5-clean-3f__jn0u GIT_DIR=/Users/lucius/projects/personal/Omni++/.git GIT_WORK_TREE=/private/tmp/omni-r5-clean-3f__jn0u GIT_OPTIONAL_LOCKS=0 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=2 PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/omni-r5-clean-3f__jn0u/mpl-cache /Users/lucius/projects/personal/Omni++/.venv/bin/ruff format --check omni tests scripts",
+        "exit_code": 0,
+        "seconds": 0.01,
+        "log_sha256": "70aeb2781372748bf56bc4126fc132461937977430c7144a7cb865fa230b87a6",
+        "summary": [
+          "69 files already formatted"
+        ]
+      }
+    }
+  },
+  "host": {
+    "command": "HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4 MPLCONFIGDIR=/private/tmp/omni-r5-mpl .venv/bin/python -m pytest -q",
+    "passed": 270,
+    "seconds": 30.35,
+    "log_sha256": "f3383dea0f60116b468ba62ab9cc2f56df156ef3adbb53d07ccef894fe725c8e"
+  },
+  "static": {
+    "ruff": "passed",
+    "format": "72 files",
+    "pip_check": "passed",
+    "diff_check": "passed"
+  },
+  "baseline_r4": {
+    "commit": "f3b593f",
+    "passed": 35,
+    "seconds": 21.09,
+    "log_sha256": "1c0459fc4ae3c7242fb62ff10f0674361dc174de78d317928c10ac4f12f83c09"
+  },
+  "cuda": "not_executed",
+  "remote_ci": "not_executed"
+}

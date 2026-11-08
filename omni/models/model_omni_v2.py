@@ -6,12 +6,14 @@ from dataclasses import dataclass
 from torch import Tensor, nn
 from transformers.cache_utils import Cache
 
+from .bridge import FixedBridge as FixedBridge
+from .bridge import bridge_spec, build_bridge
 from .config import OmniPlusConfig
 from .encoders.model_encoders import Projector
 from .model_omni import ModalFeatures, OmniOutput
 from .model_omni import OmniPlusOmni as LegacyOmni
 from .talker.model_talker import TalkerModule
-from .thinker.model_thinker import PastKeyValues, RMSNorm
+from .thinker.model_thinker import PastKeyValues
 from .thinker.qwen_backend import QwenBackend
 
 
@@ -21,18 +23,6 @@ class OmniCache:
 
     thinker: Cache
     talker: PastKeyValues
-
-
-class FixedBridge(nn.Module):
-    def __init__(self, input_size: int, output_size: int, eps: float) -> None:
-        super().__init__()
-        self.proj = nn.Linear(input_size, output_size, bias=False)
-        self.norm = RMSNorm(output_size, eps)
-
-    def forward(self, hidden: Tensor, valid: Tensor) -> Tensor:
-        """原始 block 输出 [B,T,D] → Talker 条件 [B,T,H]；valid 为 [B,T]。"""
-        condition = self.norm(self.proj(hidden))
-        return condition.masked_fill(~valid.bool().unsqueeze(-1), 0)
 
 
 class OmniPlusOmni(nn.Module):
@@ -47,8 +37,7 @@ class OmniPlusOmni(nn.Module):
             native.vocab_size,
         ):
             raise ValueError("Omni 配置的 Thinker 尺寸与原生 Qwen 不一致。")
-        if not 0 <= config.bridge_layer < native.num_hidden_layers:
-            raise ValueError("bridge_layer 必须指向有效的 Qwen Block。")
+        self.bridge_spec = bridge_spec(config)
         markers = [*config.image_ids, *config.audio_ids]
         if len(config.image_ids) != 1 or len(config.audio_ids) != 1 or len(set(markers)) != 2:
             raise ValueError("图像和音频必须各有一个不同的占位 ID。")
@@ -57,11 +46,7 @@ class OmniPlusOmni(nn.Module):
         self.thinker = thinker.requires_grad_(False).eval()
         self.vision_proj = Projector(config.image_hidden_size, native.hidden_size)
         self.audio_proj = Projector(config.audio_hidden_size, native.hidden_size)
-        self.bridge = (
-            bridge
-            if bridge is not None
-            else FixedBridge(native.hidden_size, config.talker_hidden_size, config.rms_norm_eps)
-        )
+        self.bridge = bridge if bridge is not None else build_bridge(config, self.bridge_spec)
         self.talker = TalkerModule(config, projected_condition=True)
 
     def train(self, mode: bool = True) -> "OmniPlusOmni":
@@ -151,18 +136,26 @@ class OmniPlusOmni(nn.Module):
             raise ValueError("媒体占位必须与特征一起在 prefill 输入。")
 
         # 冻结权重仍允许梯度从 Qwen 输出回到 Projector。
+        layers = self.bridge_spec["layers"]
+        selection = (
+            {"hidden_layer": layers[0]} if len(layers) == 1 else {"hidden_layers": tuple(layers)}
+        )
         thinker = self.thinker(
             inputs_embeds=hidden,
             attention_mask=mask,
             position_ids=positions,
             past_key_values=thinker_past,
             use_cache=use_cache,
-            hidden_layer=config.bridge_layer,
             logits_to_keep=logits_to_keep,
+            **selection,
         )
-        condition = self.bridge(
-            thinker.selected_hidden_state.to(self.talker.text_scale), mask[:, -seq:]
-        )
+        if len(layers) == 1:
+            bridge_input = thinker.selected_hidden_state.to(self.talker.text_scale)
+        else:
+            bridge_input = tuple(
+                state.to(self.talker.text_scale) for state in thinker.selected_hidden_states
+            )
+        condition = self.bridge(bridge_input, mask[:, -seq:])
         if audio_ids is None:
             audio_ids = input_ids.new_full(audio_shape, config.audio_pad_token)
 

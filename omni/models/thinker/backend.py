@@ -12,6 +12,7 @@ class BackboneOutput:
     logits: Tensor  # 浮点 [batch, kept_seq, vocab]
     selected_hidden_state: Tensor | None  # 浮点 [batch, seq, hidden]
     past_key_values: Cache | None
+    selected_hidden_states: tuple[Tensor, ...] = ()  # 每项 [batch, seq, hidden]
 
 
 class ThinkerBackend(Protocol):
@@ -30,6 +31,7 @@ class ThinkerBackend(Protocol):
         past_key_values: Cache | None = None,
         use_cache: bool = False,
         hidden_layer: int | None = None,
+        hidden_layers: tuple[int, ...] | None = None,
         logits_to_keep: int = 0,
     ) -> BackboneOutput:
         """计算文本 logits、可选的 block 输出和原生 Cache。"""

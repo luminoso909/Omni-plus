@@ -8,7 +8,8 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 | ✅ 已验收（Qwen Omni 架构） | R2 真实资产离线 Smoke：音文对齐、梯度、Cache 与 PCM 分块通过；尚未训练新 Talker |
 | ✅ 已验收（本地训练工程） | R3-L：四任务各 8 条诊断样本、版本化缓存、tiny 参数更新及新进程完整恢复 |
 | ✅ 已验收（本地 SFT 实现） | R4-L：T2A、独立 Projector、联合 LoRA、验证/生成与完整恢复；222 项回归通过 |
-| 🧪 待实测 | 本地 R5-L–R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
+| ✅ 本地实现与 Tiny 验收 | R5-L：Fixed、Last、Weighted、Gated，独立运行矩阵、完整恢复和留出集评测 |
+| 🧪 待实测 | 本地 R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
@@ -117,6 +118,8 @@ python scripts/run_experiment.py resume --config configs/v2/r4d_local.yaml --ste
 ```
 
 每任务的采样比例、Loss 权重、batch 和模块 LR 分别配置；保存完整 Checkpoint 和独立多模态/LoRA Adapter。统一 JSONL 支持经审计的原始目标录音，不直接导入未知版本 codes。真实 Tiny T2A 同一 6 条训练样本 Loss 下降 4.52%；这只是局部优化证据。预测 WAV 已走通 Mimi/本地 ASR，但未达到音质验收，不能称 B1 已成立。实际命令、限制与 G4 入口见 [R4-L 报告](docs/stages/R4-local.md) · [G4 云端说明](docs/cloud/G4_SFT_RUNBOOK.md)。
+
+R5-L 用 `model.bridge` 选择候选与零基 Qwen Block。四组共享训练入口、数据和预算。`bridge_ablation.py plan` 生成独立配置，`collect` 汇总匹配的终点 Checkpoint 和评测产物。G5 等待 B1 和正式方案。 [R5-L 报告](docs/stages/R5-local.md) · [G5 操作说明](docs/cloud/G5_BRIDGE_RUNBOOK.md)
 
 ### 5 流式推理
 

@@ -1,6 +1,7 @@
 """SFT 验证、模态对照及有界音频评估；缺少 ASR 时不填写质量分数。"""
 
 import re
+import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -173,6 +174,8 @@ def generate_audio(
     output_dir: Path,
     max_new_tokens: int = 128,
     asr: Callable[[Tensor, int], str] | None = None,
+    *,
+    measure_stream: bool = False,
 ) -> dict:
     """从样本的 prompt 自回归生成；导出真实预测 PCM，绝不解码答案冒充预测。"""
     output_dir = Path(output_dir)
@@ -193,15 +196,37 @@ def generate_audio(
         for key in ("audio_features", "image_features")
     }
     model.eval()
+    ids = sample["input_ids"][None, :start].to(device)
+    mask = sample["attention_mask"][None, :start].to(device)
+    if measure_stream:
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+            torch.cuda.reset_peak_memory_stats(device)
+        elif device.type == "mps":
+            torch.mps.synchronize()
+        start_time = time.perf_counter()
+
     events = list(
         model.stream_generate(
-            sample["input_ids"][None, :start].to(device),
-            attention_mask=sample["attention_mask"][None, :start].to(device),
+            ids,
+            attention_mask=mask,
             max_new_tokens=max_new_tokens,
             use_cache=True,
             **features,
         )
     )
+    timing = {}
+    if measure_stream:
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        elif device.type == "mps":
+            torch.mps.synchronize()
+        timing = dict(
+            stream_seconds=time.perf_counter() - start_time,
+            cuda_peak_allocated_bytes=(
+                torch.cuda.max_memory_allocated(device) if device.type == "cuda" else None
+            ),
+        )
     text_ids = [int(token.item()) for token, _ in events if token is not None]
     frames = [codes for _, codes in events if codes is not None]
     eos = getattr(model.config, "eos_token_id", [])
@@ -221,6 +246,7 @@ def generate_audio(
         asr_status="not_measured",
         cer=None,
         wer=None,
+        **timing,
     )
     output_dir.mkdir(parents=True, exist_ok=False)
     if frames:

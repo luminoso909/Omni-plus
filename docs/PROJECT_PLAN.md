@@ -2,7 +2,7 @@
 
 > **文档类型**：项目主规划。下文保留 v2.0 的架构、研究设计和验收标准，执行顺序见 v2.1 执行附录。<br>
 > **版本 / 日期**：v2.1 / 2026-11-08<br>
-> **状态**：R0–R3-L 与 R4-L 本地代码/Tiny 验收已完成。R5-L 等待授权，G3 与正式训练尚未执行。<br>
+> **状态**：R5-L 本地代码与 Tiny 验收已完成，等待独立审查。G3 与正式训练尚未执行。<br>
 > **研究定位**：**以 Qwen3-1.7B 为主 Thinker，自主构建并训练轻量级 Thinker–Bridge–Talker Omni 模型；在可靠的多模态 SFT Baseline 上研究 Adaptive Bridge 与 Multimodal GRPO。**  
 > **最重要的要求**：**继承 P0–P5、最小改造、阶段验收、严格归因、历史只读。**
 
@@ -13,7 +13,7 @@
 你现在接手的是**已经完成 P0–P5 的现有仓库**，不是空仓库。不要重新初始化，不要从头再做 MiniMind-O，也不要在没有审计仓库的情况下用新代码覆盖旧实现。
 
 1. 首先读取仓库 `README.md`、`AGENTS.md`、`docs/PROJECT_PLAN.md`、`docs/项目待办.md`、两份 v2.1 配套规划及已验收阶段报告，并检查 `omni/`、`configs/`、`scripts/`、`tests/`、`experiments/` 与 Git 状态。
-2. **每次只执行用户授权的一阶段**。R4-L 本地代码与 Tiny 验收已完成，后续 R5-L、资源下载、正式训练与云任务分别取得授权。
+2. **每次只执行用户授权的一阶段**。R5-L 本地代码与 Tiny 验收已完成，后续阶段、资源下载、正式训练与云任务分别取得授权。
 3. 把 `docs/stages/P0.md`–`P5.md` 当作不可修改的历史证据：**不得编辑、移动、重命名、格式化、覆盖、追加内容或删除**。原始实验记录、权重与成果同样不得覆盖；历史脚本必须继续可复现。
 4. 将主线从“MiniMind Dense/MoE 复现 → Qwen 扩容”更新成 **“已有 MiniMind 成果归档 → Qwen3-1.7B 主干迁移 → Omni 对齐/SFT Baseline → Adaptive Bridge / Multimodal GRPO → 评测”**。MiniMind 实现仍保留作历史兼容测试和架构参考，**不再是必须正式训练或并行研究的 Baseline**。
 5. 先给出**实际文件级清单**与修改理由；完成授权阶段后执行测试、提交 `docs/stages/R0.md`（后续为 `R1.md`…），更新 `README.md` 与 `docs/项目待办.md`，报告变更与未解决问题；然后停止。
@@ -689,6 +689,13 @@ R3 的数据与单卡真实 Profile 通过；用户确认训练预算、数据�
 ---
 
 ## R5｜Adaptive Bridge 研究与消融（R4 后设计细节）
+
+### v2.1 本地验收（R5-L）
+
+- [x] Fixed、Last、Weighted、Gated 的选层、数学、梯度、Cache 与 Streaming 回归。
+- [x] 复用 SFT、共同 Fixed 权重初始化、严格恢复、独立矩阵与留出集评测导出。
+- [x] [本地报告](stages/R5-local.md)与 [G5 操作说明](cloud/G5_BRIDGE_RUNBOOK.md)。
+- [ ] G5 以验收后的 B1 执行正式受控实验并汇总效果与成本。
 
 ### 前置条件
 

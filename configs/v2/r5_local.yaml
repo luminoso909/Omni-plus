@@ -1,0 +1,13 @@
+# Tiny R5 诊断。四个候选共享 R3 缓存、种子、优化器和 2 次更新。
+extends: r4a_local.yaml
+training:
+  steps: 2
+  eval_interval: 1
+  save_interval: 1
+  patience: 0
+  max_seconds: 0.0
+evaluation:
+  max_new_tokens: 24
+  benchmark:
+    split: test
+    t2a_samples: 1

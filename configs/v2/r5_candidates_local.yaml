@@ -1,0 +1,4 @@
+fixed: {kind: fixed, layers: [0]}
+last: {kind: last, layers: [1]}
+weighted: {kind: weighted, layers: [0, 1]}
+gated: {kind: gated, layers: [0, 1]}

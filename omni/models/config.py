@@ -70,8 +70,9 @@ class OmniPlusConfig(PretrainedConfig):
         image_special_token: str = "<|image_pad|>",
         image_hidden_size: int = 768,
         image_token_len: int = 64,
-        # Bridge：Thinker 条件特征的取层位置
+        # Bridge：Thinker 条件特征的取层与融合方式
         bridge_layer: int | None = None,
+        bridge: dict[str, Any] | None = None,
         # Hugging Face 通用配置字段
         **kwargs: Any,
     ) -> None:
@@ -171,6 +172,8 @@ class OmniPlusConfig(PretrainedConfig):
         self.bridge_layer = (
             max(0, num_hidden_layers // 2 - 1) if bridge_layer is None else bridge_layer
         )
+        if bridge is not None:
+            self.bridge = bridge
 
         # 统一校验配置，不在模型计算中重复检查
         self._validate_dimensions()

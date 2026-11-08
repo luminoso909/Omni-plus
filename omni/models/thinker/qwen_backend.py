@@ -30,6 +30,7 @@ class QwenBackend(nn.Module):
         past_key_values: Cache | None = None,
         use_cache: bool = False,
         hidden_layer: int | None = None,
+        hidden_layers: tuple[int, ...] | None = None,
         logits_to_keep: int = 0,
     ) -> BackboneOutput:
         """输入 token 或浮点 embedding，沿用模型精度与设备。
@@ -37,7 +38,8 @@ class QwenBackend(nn.Module):
         attention_mask 为覆盖历史和当前步的 bool 或 0/1 long [batch, total_seq]。
         position_ids 为 long [batch 或 1, seq]，cache_position 为物理 long [seq]。
         Cache 可原地增长。新话轮传入 None，关闭 Cache 时从空状态计算。
-        hidden_layer 从零起算，返回指定 block 后、最终 norm 前的状态。
+        hidden_layer 与 hidden_layers 二选一，按零起算 block 编号取层。
+        多层结果沿请求顺序，每项均为当前 [B,T,D]，末层也在最终 norm 前。
         """
         if (input_ids is None) == (inputs_embeds is None):
             raise ValueError("Specify exactly one of input_ids or inputs_embeds.")
@@ -45,6 +47,16 @@ class QwenBackend(nn.Module):
             raise ValueError("past_key_values requires use_cache=True.")
         if hidden_layer is not None and not 0 <= hidden_layer < self.model.config.num_hidden_layers:
             raise ValueError("hidden_layer must select a zero-based decoder block.")
+        if hidden_layers is not None and (
+            hidden_layer is not None
+            or not hidden_layers
+            or any(
+                type(i) is not int or not 0 <= i < self.model.config.num_hidden_layers
+                for i in hidden_layers
+            )
+            or len(set(hidden_layers)) != len(hidden_layers)
+        ):
+            raise ValueError("hidden_layers needs distinct zero-based blocks and no hidden_layer.")
         if logits_to_keep < 0:
             raise ValueError("logits_to_keep must be nonnegative.")
 
@@ -61,18 +73,22 @@ class QwenBackend(nn.Module):
                 position_ids = positions.masked_fill(attention_mask == 0, 1)[:, -seq:]
 
         # 只捕获本次调用的指定 block，退出时释放 hook，保留原始梯度。
-        hidden: Tensor | None = None
+        layers = (hidden_layer,) if hidden_layer is not None else hidden_layers or ()
+        hidden: dict[int, Tensor] = {}
         with ExitStack() as scope:
-            if hidden_layer is not None:
+            if layers:
                 thread_id = get_ident()
 
-                def capture_hidden(_module: nn.Module, _args: tuple, output: Tensor) -> None:
-                    nonlocal hidden
-                    if get_ident() == thread_id:
-                        hidden = output
+                def capture(index: int):
+                    def hook(_module: nn.Module, _args: tuple, output: Tensor) -> None:
+                        if get_ident() == thread_id:
+                            hidden[index] = output
 
-                layer = self.model.model.layers[hidden_layer]
-                scope.enter_context(layer.register_forward_hook(capture_hidden))
+                    return hook
+
+                for index in layers:
+                    layer = self.model.model.layers[index]
+                    scope.enter_context(layer.register_forward_hook(capture(index)))
 
             # 物理 Cache 位置交给 HF 推断，显式传入时原样使用。
             out = self.model(
@@ -88,4 +104,9 @@ class QwenBackend(nn.Module):
                 logits_to_keep=logits_to_keep,
                 return_dict=True,
             )
-        return BackboneOutput(out.logits, hidden, out.past_key_values)
+        return BackboneOutput(
+            out.logits,
+            hidden[hidden_layer] if hidden_layer is not None else None,
+            out.past_key_values,
+            tuple(hidden[i] for i in layers) if hidden_layers is not None else (),
+        )

@@ -1,0 +1,11 @@
+# G5 配置起点。先通过 G3/G4，再从已冻结的 B1 和获批数据创建派生配置。
+extends: r4d_h100.yaml
+assets:
+  reference_root: weights/media-reference
+training:
+  patience: 0
+  max_seconds: 0.0
+evaluation:
+  benchmark:
+    split: test
+    t2a_samples: 1

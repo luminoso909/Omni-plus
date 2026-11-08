@@ -1,4 +1,4 @@
-"""R3/R4 共用配置、数据调度和 SFT 入口；单步训练及完整恢复沿用 P4。"""
+"""R3–R5 共用配置、数据调度和 SFT 入口；单步训练及完整恢复沿用 P4。"""
 
 import hashlib
 import json
@@ -17,6 +17,7 @@ from torch import nn
 from transformers import Qwen3Config, Qwen3ForCausalLM
 
 from omni.data.omni_dataset import OmniCollator
+from omni.models.bridge import bridge_spec
 from omni.models.config import OmniPlusConfig
 from omni.models.model_omni_v2 import OmniPlusOmni
 from omni.models.thinker.qwen_backend import QwenBackend
@@ -47,7 +48,14 @@ def merge_settings(path: Path, parents: tuple[Path, ...] = ()) -> dict:
                 if isinstance(left.get(key), dict)
                 and isinstance(value, dict)
                 and key
-                not in {"tasks", "sample_weights", "task_weights", "task_batch_sizes", "group_lrs"}
+                not in {
+                    "tasks",
+                    "sample_weights",
+                    "task_weights",
+                    "task_batch_sizes",
+                    "group_lrs",
+                    "bridge",
+                }
                 else value
             )
         return left
@@ -85,7 +93,7 @@ def read_settings(path: Path, root: Path) -> dict:
     if version == 2:
         allowed["root"] |= {"evaluation"}
         allowed["data"] |= {"audited_manifest", "audited_manifest_sha256"}
-        allowed["model"] |= {"initialization"}
+        allowed["model"] |= {"initialization", "bridge"}
         allowed["training"] |= {
             "eval_interval",
             "save_interval",
@@ -101,7 +109,7 @@ def read_settings(path: Path, root: Path) -> dict:
             "max_seconds",
         }
         allowed["lora"] |= {"rank", "alpha", "targets", "dropout"}
-        allowed["evaluation"] = {"max_new_tokens", "asr_dir"}
+        allowed["evaluation"] = {"max_new_tokens", "asr_dir", "benchmark"}
         settings.setdefault("evaluation", {})
     for name, keys in allowed.items():
         section = settings if name == "root" else settings[name]
@@ -174,6 +182,8 @@ def read_settings(path: Path, root: Path) -> dict:
     for name in files:
         if not (model_dir / name).is_file():
             raise FileNotFoundError(model_dir / name)
+    if "bridge" in settings["model"]:
+        model_config(settings, root)
     return settings
 
 
@@ -219,24 +229,29 @@ def validate_r4(settings: dict, root: Path) -> None:
     if lora.get("dropout", 0) != 0:
         raise ValueError("已验收 LoRA 的 dropout 必须为 0。")
     initial = settings["model"].get("initialization", {})
-    if set(initial) - {
-        "talker",
+    checkpoints = {
         "talker_checkpoint",
         "components_checkpoint",
         "vision_checkpoint",
         "audio_checkpoint",
+    }
+    bridge_sources = {"bridge_base_checkpoint", "bridge_base_manifest"}
+    if set(initial) - {
+        "talker",
+        *checkpoints,
+        *bridge_sources,
     }:
         raise ValueError("未知 initialization 配置键。")
     if initial.get("talker", "random") not in {"random", "pretrained"}:
         raise ValueError("Talker 初始化需要 random 或 pretrained。")
     if (initial.get("talker", "random") == "pretrained") != bool(initial.get("talker_checkpoint")):
         raise ValueError("pretrained Talker 需要显式兼容权重；random 不能指定它。")
-    for key in (
-        "talker_checkpoint",
-        "components_checkpoint",
-        "vision_checkpoint",
-        "audio_checkpoint",
-    ):
+    has_base = bool(initial.get("bridge_base_checkpoint"))
+    if has_base != bool(initial.get("bridge_base_manifest")):
+        raise ValueError("Bridge 热启动需要同时指定 Fixed Checkpoint 和对应 run Manifest。")
+    if has_base and any(initial.get(key) for key in checkpoints):
+        raise ValueError("Bridge 热启动不能与独立组件初始化混用。")
+    for key in sorted(checkpoints | bridge_sources):
         if initial.get(key) and not (root / initial[key]).is_file():
             raise FileNotFoundError(root / initial[key])
     if "audited_manifest" in settings["data"]:
@@ -244,6 +259,10 @@ def validate_r4(settings: dict, root: Path) -> None:
             raise ValueError("审计源需要 audited_manifest_sha256。")
     if not 1 <= settings["evaluation"].get("max_new_tokens", 128) <= 4096:
         raise ValueError("生成预算必须在 1–4096。")
+    if "benchmark" in settings["evaluation"]:
+        from omni.evaluation.bridge_benchmark import benchmark_options
+
+        benchmark_options(settings["evaluation"])
 
 
 def data_contract(settings: dict, root: Path) -> dict:
@@ -305,7 +324,11 @@ def model_config(settings: dict, root: Path) -> tuple[OmniPlusConfig, Qwen3Confi
             talker_adapter_rank=8,
             dropout=0.1,
         )
-    return OmniPlusConfig(**values), native
+    if "bridge" in settings["model"]:
+        values["bridge"] = settings["model"]["bridge"]
+    config = OmniPlusConfig(**values)
+    bridge_spec(config)
+    return config, native
 
 
 def build_model(settings: dict, root: Path, *, meta: bool = False) -> OmniPlusOmni:
@@ -361,6 +384,12 @@ def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
                 values = state
             expected = module.state_dict()
         else:
+            config = payload.get("config") or payload.get("metadata", {}).get("config")
+            if config is not None:
+                if bridge_spec(OmniPlusConfig(**config)) != bridge_spec(model.config):
+                    raise ValueError("组件 Checkpoint 的 Bridge 类型或选层不匹配。")
+            elif hasattr(model.config, "bridge"):
+                raise ValueError("显式 Bridge 的组件初始化需要可核验的模型配置。")
             expected = {
                 name: value
                 for name, value in model.state_dict().items()
@@ -380,6 +409,74 @@ def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
         with torch.no_grad():
             for name, value in expected.items():
                 value.copy_(values[name])
+
+
+def initialize_bridge_base(
+    model: OmniPlusOmni, settings: dict, root: Path, contract: dict, source_sha: dict
+) -> None:
+    """从同一个 Fixed 训练结果导入共享权重，融合参数保留本候选初始化。"""
+    initial = settings["model"].get("initialization", {})
+    if not initial.get("bridge_base_checkpoint"):
+        return
+    manifest = json.loads((root / initial["bridge_base_manifest"]).read_text())
+    if manifest.get("checkpoint_sha256") != source_sha["bridge_base_checkpoint"]:
+        raise ValueError("Bridge 热启动 Checkpoint 与来源 Manifest 的 SHA-256 不一致。")
+
+    # macOS 复制到 Linux 时，AppleDouble 侧车文件可能不存在。
+    def asset_hashes(assets: dict) -> dict:
+        return {name: sha for name, sha in assets.items() if not Path(name).name.startswith("._")}
+
+    if manifest.get("asset_identity") != adapter_identity(settings, contract) or asset_hashes(
+        manifest.get("data_contract", {}).get("assets", {})
+    ) != asset_hashes(contract["assets"]):
+        raise ValueError("Bridge 热启动的 Qwen、Tokenizer 或媒体资产身份不一致。")
+
+    payload = torch.load(
+        root / initial["bridge_base_checkpoint"], map_location="cpu", weights_only=True, mmap=True
+    )
+    identity = payload.get("progress", {}).get("identity", {})
+    source_settings = identity.get("settings")
+    if (
+        not source_settings
+        or source_settings != manifest.get("config")
+        or identity["data_manifest_sha256"] != manifest.get("data_manifest_sha256")
+    ):
+        raise ValueError("Bridge 热启动需要与 Manifest 匹配的完整训练 Checkpoint。")
+
+    source = dict(payload["config"])
+    target = model.config.to_dict()
+    source_bridge = bridge_spec(OmniPlusConfig(**source))
+    if source_bridge["kind"] != "fixed":
+        raise ValueError("Bridge 热启动只接受 Fixed 来源。")
+    target_bridge = bridge_spec(model.config)
+    if target_bridge["kind"] == "fixed" and target_bridge != source_bridge:
+        raise ValueError("Fixed 对照组必须沿用来源 Checkpoint 的选层。")
+    for config in (source, target):
+        config.pop("bridge", None)
+        config.pop("bridge_layer", None)
+    if source != target:
+        raise ValueError("Bridge 热启动的非 Bridge 模型配置不一致。")
+    source_lora, target_lora = source_settings["lora"], settings["lora"]
+    if source_lora.get("enabled", False) != target_lora.get("enabled", False) or (
+        source_lora.get("enabled", False) and source_lora != target_lora
+    ):
+        raise ValueError("Bridge 热启动的 LoRA 配置不一致。")
+
+    expected, values = model.state_dict(), payload["model"]
+    shared = {
+        name
+        for name in expected
+        if not name.startswith("bridge.") or name.startswith(("bridge.proj.", "bridge.norm."))
+    }
+    if shared != values.keys() or any(
+        expected[name].shape != value.shape
+        or expected[name].dtype != value.dtype
+        or (value.is_floating_point() and not value.isfinite().all())
+        for name, value in values.items()
+    ):
+        raise ValueError("Bridge 热启动的共享权重键、shape、dtype 或数值不兼容。")
+
+    model.load_state_dict(expected | values, strict=True)
 
 
 def parameter_group(name: str) -> str:
@@ -465,6 +562,7 @@ def run_identity(settings: dict, root: Path) -> dict:
         "omni/training/r3_local.py",
         "omni/training/sft.py",
         "omni/training/losses.py",
+        "omni/models/bridge.py",
         "omni/models/model_omni_v2.py",
         "omni/models/thinker/qwen_backend.py",
         "omni/models/talker/model_talker.py",
@@ -474,16 +572,24 @@ def run_identity(settings: dict, root: Path) -> dict:
     )
     if settings["schema_version"] == 2:
         files += ("omni/training/adapters.py", "omni/evaluation/sft.py", "omni/data/sft_sources.py")
+    bridge_identity = {}
+    if "bridge" in settings["model"] or settings["model"].get("initialization", {}).get(
+        "bridge_base_checkpoint"
+    ):
+        bridge_identity["model_config_sha256"] = digest(root / settings["model"]["config"])
+    if bridge_identity or "benchmark" in settings.get("evaluation", {}):
+        files += ("omni/evaluation/bridge_benchmark.py",)
     return dict(
         settings=settings,
         data_manifest_sha256=digest(root / settings["data"]["cache_dir"] / "manifest.json"),
         initialization_sha256={
             name: digest(root / value)
             for name, value in settings["model"].get("initialization", {}).items()
-            if name.endswith("_checkpoint") and value
+            if (name.endswith("_checkpoint") or name == "bridge_base_manifest") and value
         },
         runtime=dict(torch=str(torch.__version__), transformers=transformers.__version__),
         source_sha256={name: digest(root / name) for name in files},
+        **bridge_identity,
     )
 
 
@@ -661,7 +767,10 @@ def smoke(
     torch.manual_seed(seed)
     torch.set_num_threads(training["threads"])
     started = time.perf_counter()
-    model = build_model(settings, root).to(device)
+    model = build_model(settings, root)
+    if resume is None:
+        initialize_bridge_base(model, settings, root, contract, identity["initialization_sha256"])
+    model.to(device)
     groups = configure_parameters(model, training["recipe"])
     optimizer, scheduler, scaler, dtype = optimizer_state(model, settings)
     progress = dict(step=0, epoch=0, cursor=0, identity=identity)
@@ -680,7 +789,7 @@ def smoke(
     (run_dir / "resolved_config.yaml").write_text(
         yaml.safe_dump(settings, allow_unicode=True, sort_keys=False)
     )
-    rows, gradient_groups = [], {}
+    rows, gradient_groups, bridge_gradients = [], {}, {}
     start_step = progress["step"]
     stop_reason = "step_budget"
     # 固定训练探针用于观察过拟合；不把不同随机 batch 的 Loss 当作下降证据。
@@ -726,9 +835,10 @@ def smoke(
                 if not param.requires_grad or not param.grad.isfinite().all():
                     raise RuntimeError("冻结参数收到梯度或梯度非有限。")
                 group = parameter_group(name)
-                gradient_groups[group] = max(
-                    gradient_groups.get(group, 0), float(param.grad.abs().max())
-                )
+                grad = float(param.grad.abs().max())
+                gradient_groups[group] = max(gradient_groups.get(group, 0), grad)
+                if group == "bridge":
+                    bridge_gradients[name] = max(bridge_gradients.get(name, 0), grad)
         scheduler.step()
         progress["step"] += 1
         progress["scheduler"] = scheduler.state_dict()
@@ -818,6 +928,17 @@ def smoke(
         asset_identity=adapter_identity(settings, contract),
         data_contract=contract,
     )
+    if "model_config_sha256" in identity:
+        from omni.evaluation.bridge_benchmark import hardware_info
+
+        result.update(
+            scope="Bridge 训练运行记录，阶段验收与质量结论按独立评测确认",
+            bridge=bridge_spec(model.config),
+            bridge_gradient_max_abs=bridge_gradients,
+            initialization_sha256=identity["initialization_sha256"],
+            model_config_sha256=identity["model_config_sha256"],
+            hardware=hardware_info(device),
+        )
     if modern:
         result.update(
             initial_train_probe=initial_probe,
@@ -844,6 +965,12 @@ def evaluate_run(
     settings: dict, root: Path, run_dir: Path, checkpoint: Path, *, demo: bool = False
 ) -> dict:
     from omni.data.r3_prepare import load_prepared
+    from omni.evaluation.bridge_benchmark import (
+        asr_identity,
+        benchmark_audio,
+        benchmark_options,
+        hardware_info,
+    )
     from omni.evaluation.sft import generate_audio, load_local_asr, modality_swap
     from omni.training.sft import move_batch
 
@@ -851,21 +978,43 @@ def evaluate_run(
         raise FileExistsError(run_dir)
     check_device(settings["training"])
     contract = data_contract(settings, root)
-    samples = load_prepared(root / settings["data"]["cache_dir"], "validation", contract)
+    cache_dir = root / settings["data"]["cache_dir"]
+    evaluation = settings.get("evaluation", {})
+    benchmark = benchmark_options(evaluation)
+    split = benchmark["split"] if benchmark else "validation"
+    samples = load_prepared(cache_dir, split, contract)
+    identity = run_identity(settings, root)
     payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
-    if payload["progress"]["identity"] != run_identity(settings, root):
+    if payload["progress"]["identity"] != identity:
         raise ValueError("评估配置、代码或数据与 Checkpoint 不一致。")
+    if benchmark:
+        torch.set_num_threads(settings["training"]["threads"])
     torch.manual_seed(settings["training"]["seed"])
     model = build_model(settings, root).to(settings["training"]["device"])
+    if payload["config"] != model.config.to_dict():
+        raise ValueError("评估模型配置与 Checkpoint 不一致。")
     model.load_state_dict(payload["model"], strict=True)
+    payload_step = payload["progress"]["step"]
     del payload
     run_dir.mkdir(parents=True, exist_ok=False)
     result = dict(
         checkpoint=str(checkpoint),
-        split="validation",
+        split=split,
         metrics=task_evaluation(model, samples, settings["training"]),
         modality_swap={},
     )
+    if benchmark:
+        result.update(
+            config=settings,
+            checkpoint_sha256=digest(checkpoint),
+            checkpoint_step=payload_step,
+            data_manifest_sha256=identity["data_manifest_sha256"],
+            initialization_sha256=identity["initialization_sha256"],
+            model_config_sha256=identity.get("model_config_sha256"),
+            source_sha256=identity["source_sha256"],
+            hardware=hardware_info(settings["training"]["device"]),
+            asset_identity=adapter_identity(settings, contract),
+        )
     collate = OmniCollator(model.config)
     for task, kind in (("i2t", "image"), ("a2t", "audio")):
         rows = [row for row in samples if row["task"] == task]
@@ -886,20 +1035,37 @@ def evaluate_run(
                 root / settings["assets"]["reference_root"] / "model/mimi", local_files_only=True
             )
         )
-        config = settings.get("evaluation", {})
-        asr = load_local_asr(root / config["asr_dir"]) if config.get("asr_dir") else None
-        sample = next((row for row in samples if row["task"] == "t2a"), None)
-        if sample is None:
-            raise ValueError("音频 demo 需要验证集 T2A 样本。")
-        result["generation"] = generate_audio(
-            model,
-            tokenizer,
-            sample,
-            codec,
-            run_dir / "audio",
-            config.get("max_new_tokens", 128),
-            asr,
-        )
+        asr_path = root / evaluation["asr_dir"] if evaluation.get("asr_dir") else None
+        max_new_tokens = evaluation.get("max_new_tokens", 128)
+        if benchmark:
+            result["asr_assets"] = asr_identity(asr_path)
+        asr = load_local_asr(asr_path) if asr_path else None
+        if benchmark:
+            selections = json.loads((cache_dir / "manifest.json").read_text())["selections"][split]
+            result["benchmark"] = benchmark_audio(
+                model,
+                tokenizer,
+                samples,
+                selections,
+                codec,
+                run_dir / "audio",
+                benchmark["t2a_samples"],
+                max_new_tokens,
+                asr,
+            )
+        else:
+            sample = next((row for row in samples if row["task"] == "t2a"), None)
+            if sample is None:
+                raise ValueError("音频 demo 需要验证集 T2A 样本。")
+            result["generation"] = generate_audio(
+                model,
+                tokenizer,
+                sample,
+                codec,
+                run_dir / "audio",
+                max_new_tokens,
+                asr,
+            )
     (run_dir / "evaluation.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     )
