@@ -1,0 +1,40 @@
+# R3-L 工程验收：真实 Qwen tokenizer / 媒体接口，随机 tiny 主干和 Talker。
+schema_version: 1
+assets:
+  qwen_dir: weights/qwen3-1.7b
+  reference_root: /Volumes/TOSHIBA/项目/minimind-o
+data:
+  sources_manifest: experiments/p4/data.json
+  source_dir: cache/p4/sources-v2
+  cache_dir: .cache/r3-local/tiny-v1
+  seed: 42
+  tasks: {t2a: 8, i2t: 8, a2t: 8, a2a: 8}
+  max_length: 1200
+model:
+  kind: tiny
+  config: configs/model/qwen_omni_r2.yaml
+  tiny:
+    hidden_size: 32
+    intermediate_size: 64
+    num_hidden_layers: 2
+    num_attention_heads: 4
+    num_key_value_heads: 2
+    talker_hidden_size: 32
+training:
+  recipe: r4a
+  tasks: [t2a]
+  device: cpu
+  dtype: float32
+  seed: 42
+  threads: 4
+  steps: 4
+  batch_size: 1
+  accumulation_steps: 2
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  scheduler: linear
+  warmup_steps: 1
+  stop_weight: 10.0
+  grad_clip: 1.0
+lora:
+  enabled: false

@@ -1,0 +1,1084 @@
+{
+  "status": "passed",
+  "commands": [
+    {
+      "label": "inspect",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "inspect",
+        "--config",
+        "configs/v2/r3_local.yaml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "prepare-hit",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "prepare",
+        "--config",
+        "configs/v2/r3_local.yaml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "dry-run",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "configs/v2/r3_local.yaml",
+        "--dry-run"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "full",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "configs/v2/r3_local.yaml",
+        "--run-dir",
+        "outputs/r3-local/full",
+        "--steps",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "part",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "configs/v2/r3_local.yaml",
+        "--run-dir",
+        "outputs/r3-local/part",
+        "--steps",
+        "2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "resumed",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "configs/v2/r3_local.yaml",
+        "--run-dir",
+        "outputs/r3-local/resumed",
+        "--resume",
+        "outputs/r3-local/part/step-000002.pt",
+        "--steps",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "i2t",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "/Users/lucius/projects/personal/Omni++/outputs/r3-local/i2t.yaml",
+        "--run-dir",
+        "outputs/r3-local/i2t",
+        "--steps",
+        "2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "a2t",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "/Users/lucius/projects/personal/Omni++/outputs/r3-local/a2t.yaml",
+        "--run-dir",
+        "outputs/r3-local/a2t",
+        "--steps",
+        "2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "a2a",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "/Users/lucius/projects/personal/Omni++/outputs/r3-local/a2a.yaml",
+        "--run-dir",
+        "outputs/r3-local/a2a",
+        "--steps",
+        "2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "g3-dry-run",
+      "command": [
+        "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+        "scripts/run_experiment.py",
+        "smoke",
+        "--config",
+        "/Users/lucius/projects/personal/Omni++/outputs/r3-local/g3-local-paths.yaml",
+        "--dry-run"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "checkpoint_equality": {
+    "model": true,
+    "optimizer": true,
+    "scaler": true,
+    "scheduler": true,
+    "rng": true,
+    "progress": true
+  },
+  "runs": {
+    "full": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "r4a",
+          "tasks": [
+            "t2a"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 1056
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 39362
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 204800
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 204800
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "t2a"
+      ],
+      "start_step": 0,
+      "step": 4,
+      "resume_from": null,
+      "frozen_before": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "frozen_after": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "trainable_before": "a74cbb26c26da435f3d05e892c70dfe1cf6ed1fd0cba887f12da7b24035e1e51",
+      "trainable_after": "b403fb1326fd359e468a3abd31da929e60a9be15cdeaa1534f61a4c2b6bf72d9",
+      "gradient_groups": {
+        "bridge": 0.09358695894479752,
+        "talker": 0.056537531316280365,
+        "audio_embedding": 0.002931447932496667,
+        "audio_heads": 0.22296194732189178
+      },
+      "metrics": [
+        {
+          "step": 1,
+          "learning_rate": 0.0003,
+          "total": 21.465118408203125,
+          "text": 11.979325771331787,
+          "audio": 9.485793113708496,
+          "aux": 0.0,
+          "grad_norm": 2.2589447498321533,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 2,
+          "learning_rate": 0.00019999999999999998,
+          "total": 21.0155668258667,
+          "text": 12.002345085144043,
+          "audio": 9.013221740722656,
+          "aux": 0.0,
+          "grad_norm": 1.5799211263656616,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 3,
+          "learning_rate": 9.999999999999999e-05,
+          "total": 22.359907150268555,
+          "text": 11.94163179397583,
+          "audio": 10.418274402618408,
+          "aux": 0.0,
+          "grad_norm": 3.4167892932891846,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 4,
+          "learning_rate": 0.0,
+          "total": 20.867629051208496,
+          "text": 12.011160850524902,
+          "audio": 8.856467962265015,
+          "aux": 0.0,
+          "grad_norm": 1.4557721614837646,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/full/step-000004.pt",
+      "elapsed_seconds": 0.2797529579984257,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "f71ed02c8fb4c91f876cae9091266bfc300dd01031fb67e7b6ec0e20e4a6a06e"
+    },
+    "part": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "r4a",
+          "tasks": [
+            "t2a"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 1056
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 39362
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 204800
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 204800
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "t2a"
+      ],
+      "start_step": 0,
+      "step": 2,
+      "resume_from": null,
+      "frozen_before": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "frozen_after": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "trainable_before": "a74cbb26c26da435f3d05e892c70dfe1cf6ed1fd0cba887f12da7b24035e1e51",
+      "trainable_after": "9033f8cca6b41d7376526de74208e292d8fdcf91a83535a212347e336920ee7d",
+      "gradient_groups": {
+        "bridge": 0.09058749675750732,
+        "talker": 0.05894651636481285,
+        "audio_embedding": 0.0033158494625240564,
+        "audio_heads": 0.23261535167694092
+      },
+      "metrics": [
+        {
+          "step": 1,
+          "learning_rate": 0.0003,
+          "total": 21.465118408203125,
+          "text": 11.979325771331787,
+          "audio": 9.485793113708496,
+          "aux": 0.0,
+          "grad_norm": 2.2589447498321533,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 2,
+          "learning_rate": 0.00019999999999999998,
+          "total": 21.0155668258667,
+          "text": 12.002345085144043,
+          "audio": 9.013221740722656,
+          "aux": 0.0,
+          "grad_norm": 1.5799211263656616,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/part/step-000002.pt",
+      "elapsed_seconds": 0.24655766699288506,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "3b996786022d4af409b4338abb173e53f65e1c4ed32fed923998166ffc6db2aa"
+    },
+    "resumed": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "r4a",
+          "tasks": [
+            "t2a"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 1056
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 39362
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 204800
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 204800
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "t2a"
+      ],
+      "start_step": 2,
+      "step": 4,
+      "resume_from": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/part/step-000002.pt",
+      "frozen_before": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "frozen_after": "c3bad0489b07f0cc8db90276af793db469a90d9cc2198a42e872974cac5cf698",
+      "trainable_before": "9033f8cca6b41d7376526de74208e292d8fdcf91a83535a212347e336920ee7d",
+      "trainable_after": "b403fb1326fd359e468a3abd31da929e60a9be15cdeaa1534f61a4c2b6bf72d9",
+      "gradient_groups": {
+        "bridge": 0.09358695894479752,
+        "talker": 0.056537531316280365,
+        "audio_embedding": 0.002931447932496667,
+        "audio_heads": 0.22296194732189178
+      },
+      "metrics": [
+        {
+          "step": 3,
+          "learning_rate": 9.999999999999999e-05,
+          "total": 22.359907150268555,
+          "text": 11.94163179397583,
+          "audio": 10.418274402618408,
+          "aux": 0.0,
+          "grad_norm": 3.4167892932891846,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 4,
+          "learning_rate": 0.0,
+          "total": 20.867629051208496,
+          "text": 12.011160850524902,
+          "audio": 8.856467962265015,
+          "aux": 0.0,
+          "grad_norm": 1.4557721614837646,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/resumed/step-000004.pt",
+      "elapsed_seconds": 0.27069591599865817,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "f6818d8bb165ad0388eb5be9ef51e6d3680fc62ae5e1386622f053b0ba263e79"
+    },
+    "i2t": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "projectors",
+          "tasks": [
+            "i2t"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 27200
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 18496
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 0
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 0
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 0
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 0
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "i2t"
+      ],
+      "start_step": 0,
+      "step": 2,
+      "resume_from": null,
+      "frozen_before": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "frozen_after": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "trainable_before": "5349717f8d5f638fe7bf70fc950d5ce1bd14811bdbe9cb5d3795db45622bb837",
+      "trainable_after": "3202ff4bf2a3cb0fed77a2d8ce0755ad08248a25f90d955759d91109a0d91568",
+      "gradient_groups": {
+        "vision_proj": 0.02940049022436142
+      },
+      "metrics": [
+        {
+          "step": 1,
+          "learning_rate": 0.0003,
+          "total": 11.933318376541138,
+          "text": 11.933318376541138,
+          "audio": 0.0,
+          "aux": 0.0,
+          "grad_norm": 0.08579399436712265,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 2,
+          "learning_rate": 0.00019999999999999998,
+          "total": 11.946516036987305,
+          "text": 11.946516036987305,
+          "audio": 0.0,
+          "aux": 0.0,
+          "grad_norm": 0.131662517786026,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/i2t/step-000002.pt",
+      "elapsed_seconds": 0.37549745799333323,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "077db65d58ed463bd4a628183521f712b568fa0630d2f3faf00c01cf6271bce2"
+    },
+    "a2t": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "projectors",
+          "tasks": [
+            "a2t"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 27200
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 18496
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 0
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 0
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 0
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 0
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "a2t"
+      ],
+      "start_step": 0,
+      "step": 2,
+      "resume_from": null,
+      "frozen_before": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "frozen_after": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "trainable_before": "5349717f8d5f638fe7bf70fc950d5ce1bd14811bdbe9cb5d3795db45622bb837",
+      "trainable_after": "e7ea53713c35d5541dc98aa274f67a01b1723d6d3305fb287d5a21a9fd7ed117",
+      "gradient_groups": {
+        "audio_proj": 0.027756646275520325
+      },
+      "metrics": [
+        {
+          "step": 1,
+          "learning_rate": 0.0003,
+          "total": 11.980094909667969,
+          "text": 11.980094909667969,
+          "audio": 0.0,
+          "aux": 0.0,
+          "grad_norm": 0.2558893859386444,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 2,
+          "learning_rate": 0.00019999999999999998,
+          "total": 12.007340908050537,
+          "text": 12.007340908050537,
+          "audio": 0.0,
+          "aux": 0.0,
+          "grad_norm": 0.35304906964302063,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/a2t/step-000002.pt",
+      "elapsed_seconds": 0.28131137500167824,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "ce16288ce4c61443314b1e003607f889ac03ff7f3e1af32df816dba784ade204"
+    },
+    "a2a": {
+      "status": "passed",
+      "scope": "R3-L 有限步数工程验收，非正式 SFT 或质量评测",
+      "model_kind": "tiny",
+      "device": "cpu",
+      "dtype": "float32",
+      "python": "3.12.14",
+      "torch": "2.15.0",
+      "transformers": "4.57.6",
+      "config": {
+        "schema_version": 1,
+        "assets": {
+          "qwen_dir": "weights/qwen3-1.7b",
+          "reference_root": "/Volumes/TOSHIBA/项目/minimind-o"
+        },
+        "data": {
+          "sources_manifest": "experiments/p4/data.json",
+          "source_dir": "cache/p4/sources-v2",
+          "cache_dir": ".cache/r3-local/tiny-v1",
+          "seed": 42,
+          "tasks": {
+            "t2a": 8,
+            "i2t": 8,
+            "a2t": 8,
+            "a2a": 8
+          },
+          "max_length": 1200
+        },
+        "model": {
+          "kind": "tiny",
+          "config": "configs/model/qwen_omni_r2.yaml",
+          "tiny": {
+            "hidden_size": 32,
+            "intermediate_size": 64,
+            "num_hidden_layers": 2,
+            "num_attention_heads": 4,
+            "num_key_value_heads": 2,
+            "talker_hidden_size": 32
+          }
+        },
+        "training": {
+          "recipe": "projectors",
+          "tasks": [
+            "a2a"
+          ],
+          "device": "cpu",
+          "dtype": "float32",
+          "seed": 42,
+          "threads": 4,
+          "steps": 4,
+          "batch_size": 1,
+          "accumulation_steps": 2,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.01,
+          "scheduler": "linear",
+          "warmup_steps": 1,
+          "stop_weight": 10.0,
+          "grad_clip": 1.0
+        },
+        "lora": {
+          "enabled": false
+        }
+      },
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 27200
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 18496
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 0
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 0
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 0
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 0
+        }
+      },
+      "train_samples": 6,
+      "tasks": [
+        "a2a"
+      ],
+      "start_step": 0,
+      "step": 2,
+      "resume_from": null,
+      "frozen_before": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "frozen_after": "5fcd501950872ca57dc0e701d1d0e75e8f59755f0e18f35108e3bdfaf10d2c3a",
+      "trainable_before": "5349717f8d5f638fe7bf70fc950d5ce1bd14811bdbe9cb5d3795db45622bb837",
+      "trainable_after": "09eaf8935d06d1b55936b3de5fdbc3957f280110bbcb65e6312e7c119328df0b",
+      "gradient_groups": {
+        "audio_proj": 0.10806454718112946
+      },
+      "metrics": [
+        {
+          "step": 1,
+          "learning_rate": 0.0003,
+          "total": 21.463951110839844,
+          "text": 11.977385997772217,
+          "audio": 9.486565589904785,
+          "aux": 0.0,
+          "grad_norm": 1.327409029006958,
+          "optimizer_updated": 1.0
+        },
+        {
+          "step": 2,
+          "learning_rate": 0.00019999999999999998,
+          "total": 21.014113903045654,
+          "text": 12.005790710449219,
+          "audio": 9.008323669433594,
+          "aux": 0.0,
+          "grad_norm": 1.1047279834747314,
+          "optimizer_updated": 1.0
+        }
+      ],
+      "data_manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+      "checkpoint": "/Users/lucius/projects/personal/Omni++/outputs/r3-local/a2a/step-000002.pt",
+      "elapsed_seconds": 0.3427087079908233,
+      "git_commit": "bd652610f30b2a3d5bd87f5a175b01e9bce1a695",
+      "source_sha256": {
+        "omni/training/r3_local.py": "0ddf1118a15648d5a6c8f4e4928a80b96dcf936831a0277e9525936eb8944ca3",
+        "omni/training/sft.py": "f1ab7b9cb5a053088873128e180f9162859f916fa8b7c5700d2557ba42ac8692",
+        "omni/training/losses.py": "d2adf3076cd4e8473b151e52b53133ba7f858f1f379da2dec30fec122d5f4b14",
+        "omni/models/model_omni_v2.py": "a7c2bd774b60695346f99a92000e9a8203baac6b0e30da0131d50b281949ff09",
+        "omni/models/thinker/qwen_backend.py": "ca117d4aedb69e899d50266cdd67418a274f283cdf1708b40159124d6e7f8bed",
+        "omni/models/talker/model_talker.py": "7ea29c1cbee0a87eac519408f52a3efad1381a9fef3101f67c1d024ea290852f",
+        "omni/models/thinker/model_thinker.py": "35a71a5d008fc8fc6b4b0a88c2acf1a2b9c013b64e606e9dba23e182bb7c3701",
+        "omni/data/r3_prepare.py": "87fd9ea7e918b8ea2479454b59e2aa9c7125c557efa1439987c219b7769dec21",
+        "omni/data/qwen_omni.py": "a08c518dc6c0d625e0cf3c8e48e81c60489d409f3efef4308cd3dc4cb7901585"
+      },
+      "checkpoint_sha256": "80a7065a8a6202fab4dc2d8d6821acb078b560fa95dfc8abf9d813866a26602a"
+    }
+  },
+  "cuda_execution": false,
+  "formal_training": false
+}

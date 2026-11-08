@@ -2,8 +2,8 @@
 
 > **文档性质**：对 `docs/PROJECT_PLAN.md`（v2.0）的**执行顺序补充**，不是推翻模型架构与研究目标。  
 > **使用对象**：本人 + Codex；先本地实现、极小样本验证所有训练/评测模块，再在云端按顺序启动真实训练与研究实验。  
-> **状态**：**新执行方案，尚未由 Codex 实施**。旧文档显示 P0–P5、R0、R1 已完成；R2 待执行，Codex 必须核对工作树实际状态。  
-> **首个动作**：从 **R2** 开始，未经授权不自动进入 R3 或实现 R4–R6。
+> **状态更新（2026-11-08）**：R2 架构与 R3-L 本地数据/训练准备已验收；下文保留规划命令，实际可用入口以 [R3-L 报告](stages/R3-local.md) 和 [G3 操作说明](G3_CLOUD_RUNBOOK.md) 为准。云端各阶段尚未执行。
+> **下一阶段**：R4-L 等待用户授权。
 
 ---
 
@@ -58,6 +58,8 @@
 ---
 
 ## 2. 需要 Codex 提供的稳定 CLI 契约（**待实现，并非当前仓库已存在**）
+
+2026-11-08 已落实 `scripts/run_experiment.py inspect/prepare/smoke --config ...`、`--dry-run` 和 `smoke --resume`。参数统计为 meta 模型；恢复写新 run，保留原记录。下文 `train/resume/evaluate/profile/export` 独立命令仍是后续设计，不能直接当作已实现入口。真实本地复现命令见 [R3-L 报告](stages/R3-local.md)。
 
 先审计并尽量复用已有 `scripts/train_sft.py`、`scripts/prepare_p4.py`、`omni/training/`、`omni/inference/`。**推荐新增一层薄 CLI 包装**，而不是重写模型/训练器。最终命令名称应由 Codex 实施并写入 README 和每阶段报告；以下是要求落实的**目标接口**，执行前必须在真实仓库中通过 `--help` 和 smoke 证明它们存在。
 
@@ -413,4 +415,4 @@ R5 与 R6 以**同一个冻结 B1**为研究起点，可以分别执行；两者
 - Hugging Face PEFT/LoRA 集成：<https://huggingface.co/docs/transformers/peft>
 - 本项目现有历史事实与正式研究边界：`docs/PROJECT_PLAN.md`、`docs/stages/P0.md`–`P5.md`、`docs/stages/R0.md`、`R1.md`（以实际仓库为准）。
 
-**下一步不变：先执行 R2；R2 通过后才逐个授权本地 R3-L、R4-L、R5-L、R6-L。**
+**当前下一步：R4-L，等待授权；随后逐个验收 R5-L、R6-L，再进入云端 G3–G7。**

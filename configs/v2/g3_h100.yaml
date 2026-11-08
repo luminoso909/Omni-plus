@@ -1,0 +1,38 @@
+# G3 候选：1×H100 80GB。仅本地 dry-run，CUDA 资源与性能尚未验收。
+schema_version: 1
+assets:
+  qwen_dir: weights/qwen3-1.7b
+  reference_root: weights/media-reference
+data:
+  sources_manifest: experiments/p4/data.json
+  source_dir: cache/p4/sources-v2
+  cache_dir: .cache/r3-local/tiny-v1
+  seed: 42
+  tasks:
+    t2a: 8
+    i2t: 8
+    a2t: 8
+    a2a: 8
+  max_length: 1200
+model:
+  kind: qwen3
+  config: configs/model/qwen_omni_r2.yaml
+training:
+  recipe: r4a
+  tasks:
+  - t2a
+  device: cuda
+  dtype: bfloat16
+  seed: 42
+  threads: 4
+  steps: 10
+  batch_size: 1
+  accumulation_steps: 2
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  scheduler: linear
+  warmup_steps: 1
+  stop_weight: 10.0
+  grad_clip: 1.0
+lora:
+  enabled: false

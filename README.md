@@ -6,7 +6,8 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 | --- | --- |
 | ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5、独立 Qwen3-0.6B 文本基线、R0 仓库审计、R1 Qwen3-1.7B 文本 Backend |
 | ✅ 已验收（Qwen Omni 架构） | R2 真实资产离线 Smoke：音文对齐、梯度、Cache 与 PCM 分块通过；尚未训练新 Talker |
-| 🧪 待实测 | 本地 R3-L–R6-L 的实现和极小样本闭环。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
+| ✅ 已验收（本地训练工程） | R3-L：四任务各 8 条诊断样本、版本化缓存、tiny 参数更新及新进程完整恢复 |
+| 🧪 待实测 | 本地 R4-L–R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
@@ -89,7 +90,20 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 python scripts/
   --reference-root ../minimind-o --output-dir outputs/r2/recheck-01
 ```
 
-R2 已核对三条真实 T2A 时间轴、冻结模块与输入梯度、混排、双路 Cache 及 PCM 尾块。新模型权重未训练，R3-L 等待授权。 [R2 报告](docs/stages/R2.md) · [真实 Smoke 摘要](experiments/r2/20261108-cpu-fp32/manifest.json)
+R2 已核对三条真实 T2A 时间轴、冻结模块与输入梯度、混排、双路 Cache 及 PCM 尾块；原生 1.7B Omni 尚未训练。 [R2 报告](docs/stages/R2.md) · [真实 Smoke 摘要](experiments/r2/20261108-cpu-fp32/manifest.json)
+
+R3-L 的统一入口已验证，配置中的资产路径须对应本机实际位置：
+
+```bash
+python scripts/run_experiment.py --help
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py inspect --config configs/v2/r3_local.yaml
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py prepare --config configs/v2/r3_local.yaml
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --config configs/v2/r3_local.yaml --dry-run
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --config configs/v2/r3_local.yaml --steps 2 --run-dir outputs/r3-local/recheck-part
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --config configs/v2/r3_local.yaml --steps 4 --resume outputs/r3-local/recheck-part/step-000002.pt --run-dir outputs/r3-local/recheck-resumed
+```
+
+每次 smoke 使用新目录。`prepare` 只在完整版本契约相同时复用缓存；未知版本的旧回答声码被隔离，真实语音经锁定 Mimi 重编码。当前 A2A 为复述诊断，正式问答数据仍需目标音频溯源。`inspect` 使用 meta 参数统计；tiny 更新与原生 1.7B CUDA 训练分别验收。`train/resume/evaluate/profile` 独立子命令留待后续实现。 [R3-L 报告](docs/stages/R3-local.md) · [G3 云端说明](docs/G3_CLOUD_RUNBOOK.md)
 
 ### 5 流式推理
 
