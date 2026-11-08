@@ -1,12 +1,14 @@
-## 一、OmniPlus v2.0
+## 一、OmniPlus v2.1
 
-v2.0 计划以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVoice、SigLIP2 与 Mimi，训练 Projector、Fixed Bridge 和轻量 Talker。正式多模态 SFT 形成 B1 后，再从同一基线研究 Adaptive Bridge 与 Multimodal GRPO。 [项目主规划](docs/PROJECT_PLAN.md)
+OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVoice、SigLIP2 与 Mimi，训练 Projector、Fixed Bridge 和轻量 Talker。正式多模态 SFT 形成 B1 后，再从同一基线研究 Adaptive Bridge 与 Multimodal GRPO。 [项目主规划](docs/PROJECT_PLAN.md)
 
 | 状态 | 内容 |
 | --- | --- |
 | ✅ 已验收（旧 MiniMind 或现有工程） | P0–P5、独立 Qwen3-0.6B 文本基线、R0 仓库审计、R1 Qwen3-1.7B 文本 Backend |
-| 🛠 正在迁移 | R1 已确定 Thinker 接口与 Cache 契约。R2 多模态组合等待用户授权 |
-| 🧪 待实测 | Qwen Omni 链路、全尺寸多模态 SFT、Adaptive Bridge 和 GRPO |
+| ✅ 已验收（Qwen Omni 架构） | R2 真实资产离线 Smoke：音文对齐、梯度、Cache 与 PCM 分块通过；尚未训练新 Talker |
+| 🧪 待实测 | 本地 R3-L–R6-L 的实现和极小样本闭环。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
+
+本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
 ### 1 历史验收成果（Historical validated work）
 
@@ -80,6 +82,15 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/check_p3.py --output-dir o
 
 真实编码器、Mimi 与 SFT 权重只读引用 `../minimind-o`。上述验收使用新报告路径，重复执行不得覆盖旧结果。小样本准备/缓存、训练与恢复命令见 [P4 报告](docs/stages/P4.md)，各操作显式启动。完整数据集尚未下载。
 
+R2 复用 R1 的 Qwen3-1.7B 和本地 P4 小样本。已有离线资产时，替换 `--reference-root` 为旧模型仓库实际位置，每次指定新的结果目录：
+
+```bash
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 python scripts/check_r2.py \
+  --reference-root ../minimind-o --output-dir outputs/r2/recheck-01
+```
+
+R2 已核对三条真实 T2A 时间轴、冻结模块与输入梯度、混排、双路 Cache 及 PCM 尾块。新模型权重未训练，R3-L 等待授权。 [R2 报告](docs/stages/R2.md) · [真实 Smoke 摘要](experiments/r2/20261108-cpu-fp32/manifest.json)
+
 ### 5 流式推理
 
 ```bash
@@ -98,7 +109,9 @@ omni/models/thinker/qwen_backend.py   官方 Qwen Thinker Adapter
 omni/models/encoders/                冻结编码器与模态投影
 omni/models/talker/                  音频码本与 Talker
 omni/models/model_omni.py            OmniPlusOmni 联合模型
+omni/models/model_omni_v2.py         Qwen 路径的 OmniPlusOmni 联合模型
 omni/data/omni_dataset.py            Dataset 与 Collator
+omni/data/qwen_omni.py                Qwen 原生模板与联合监督
 omni/data/prepare.py                 独立数据划分与冻结特征缓存
 omni/inference/codec.py              Mimi 与波形 IO
 omni/inference/streaming.py          每话轮的 Mimi 流式状态与 PCM 事件
@@ -108,7 +121,7 @@ configs/                            模型、资产及后续运行配置
 experiments/                        小规模可复现摘要
 ```
 
-现有 MiniMind 路径使用 `OmniPlusOmni`。Dataset 的 `labels/audio_labels` 已 shift 一次，外部 CE 按同位置 logits 对齐。原始媒体通过外部编码回调接入。Qwen 迁移将隔离 tokenizer、cache 和联合标签时间轴。 [文件级迁移表](docs/reports/R0-migration-map.md)
+MiniMind 与 Qwen 的 `OmniPlusOmni` 分属两个模型入口。Dataset 的 `labels/audio_labels` 已 shift 一次，外部 CE 按同位置 logits 对齐。原始媒体通过外部编码接入；Qwen 使用独立的 tokenizer、Cache 和联合标签构造。 [文件级迁移表](docs/reports/R0-migration-map.md)
 
 ### 7 致谢与许可
 

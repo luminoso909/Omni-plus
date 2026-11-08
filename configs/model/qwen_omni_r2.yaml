@@ -1,0 +1,29 @@
+# R2 本地架构验收。Qwen 权重及 tokenizer 继续使用 R1 资产锁。
+seed: 42
+model:
+  hidden_size: 2048
+  num_hidden_layers: 28
+  num_attention_heads: 16
+  num_key_value_heads: 8
+  vocab_size: 151936
+  bos_token_id: 151643
+  pad_token_id: 151643
+  eos_token_id: [151645, 151643]
+  think_end_ids: []
+  image_special_token: '<|image_pad|>'
+  image_ids: [151655]
+  audio_special_token: '<|vision_pad|>'
+  audio_ids: [151654]
+  bridge_layer: 13
+  image_hidden_size: 768
+  audio_hidden_size: 512
+  num_talker_hidden_layers: 4
+  talker_hidden_size: 768
+  talker_num_attention_heads: 8
+  talker_num_key_value_heads: 4
+  num_audio_codebooks: 8
+  audio_codebook_size: 2048
+  audio_vocab_size: 2112
+  audio_pad_token: 2049
+  audio_stop_token: 2050
+  audio_spk_token: 2051

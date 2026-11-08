@@ -1,17 +1,19 @@
-# OmniPlus v2.0｜最终重构、训练与研究执行规划
+# OmniPlus v2.1｜重构、训练与研究执行规划
 
-> **文档类型**：可直接交给 Codex 执行的项目主规划（`docs/PROJECT_PLAN.md` 目标内容）  
-> **版本 / 日期**：v2.0 / 2026-11-06  
-> **状态**：R0 仓库审计与 R1 Qwen3-1.7B 文本 Backend 已验收。R2 等待用户授权。<br>
+> **文档类型**：项目主规划。下文保留 v2.0 的架构、研究设计和验收标准，执行顺序见 v2.1 执行附录。<br>
+> **版本 / 日期**：v2.1 / 2026-11-08<br>
+> **状态**：R0 仓库审计、R1 Qwen3-1.7B 文本 Backend 与 R2 Omni 架构已验收。R3-L 等待授权。<br>
 > **研究定位**：**以 Qwen3-1.7B 为主 Thinker，自主构建并训练轻量级 Thinker–Bridge–Talker Omni 模型；在可靠的多模态 SFT Baseline 上研究 Adaptive Bridge 与 Multimodal GRPO。**  
 > **最重要的要求**：**继承 P0–P5、最小改造、阶段验收、严格归因、历史只读。**
+
+本地 `R2 → R3-L → R4-L → R5-L → R6-L` 先验证代码、数学正确性与极小样本闭环。再按 `G3 → G4 → G5/G6 → G7` 开展云端资源测试、训练和实验。每个阶段分别授权、记录与验收。 [v2.1 执行附录](#附录-c-v21-执行顺序与变更记录) · [本地与云端手册](OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](OMNIPLUS_DECISIONS_AND_DATA.md)
 
 ## 给 Codex 的第一条指令（请先读）
 
 你现在接手的是**已经完成 P0–P5 的现有仓库**，不是空仓库。不要重新初始化，不要从头再做 MiniMind-O，也不要在没有审计仓库的情况下用新代码覆盖旧实现。
 
-1. 首先读取仓库 `README.md`、`AGENTS.md`、`docs/PROJECT_PLAN.md`（如存在）、`docs/项目待办.md`、`docs/stages/P0.md`–`P5.md`，并检查 `omni/`、`configs/`、`scripts/`、`tests/`、`experiments/` 与 Git 状态。
-2. **本次默认只执行 R0**（第 10 章）：审计、迁移规划和文档同步。**不要自动进入 R1，不要下载大型权重或数据，不要开始训练。**
+1. 首先读取仓库 `README.md`、`AGENTS.md`、`docs/PROJECT_PLAN.md`、`docs/项目待办.md`、两份 v2.1 配套规划及已验收阶段报告，并检查 `omni/`、`configs/`、`scripts/`、`tests/`、`experiments/` 与 Git 状态。
+2. **每次只执行用户授权的一阶段**。本次授权为 R2 的架构适配与验收，后续本地工作、资源下载、正式训练与云任务分别取得授权。
 3. 把 `docs/stages/P0.md`–`P5.md` 当作不可修改的历史证据：**不得编辑、移动、重命名、格式化、覆盖、追加内容或删除**。原始实验记录、权重与成果同样不得覆盖；历史脚本必须继续可复现。
 4. 将主线从“MiniMind Dense/MoE 复现 → Qwen 扩容”更新成 **“已有 MiniMind 成果归档 → Qwen3-1.7B 主干迁移 → Omni 对齐/SFT Baseline → Adaptive Bridge / Multimodal GRPO → 评测”**。MiniMind 实现仍保留作历史兼容测试和架构参考，**不再是必须正式训练或并行研究的 Baseline**。
 5. 先给出**实际文件级清单**与修改理由；完成授权阶段后执行测试、提交 `docs/stages/R0.md`（后续为 `R1.md`…），更新 `README.md` 与 `docs/项目待办.md`，报告变更与未解决问题；然后停止。
@@ -47,13 +49,15 @@
 
 不重新写 SigLIP2 / SenseVoice / Mimi，不从零预训练 Qwen3-1.7B，不在 R0–R4 预实现复杂 Adaptive Bridge/GRPO，不强制做 DDP/ZeRO，不强制加入 Qwen3.5、不盲目追求“所有多模态组合”而忽略核心 T2A 链路。
 
-### 0.4 阶段关系
+### 0.4 v2.0 阶段关系与 v2.1 执行顺序
+
+下图保留 v2.0 的技术依赖。v2.1 将 R3–R6 的本地实现与正式训练拆开，云端工作仍遵守图中依赖。 [执行附录](#附录-c-v21-执行顺序与变更记录)
 
 ```text
 已完成历史 P0–P5 [只读保留，含旧 MiniMind 测试与 Streaming]
           │
           ▼
-R0  审计现有仓库 + 更新项目文档（默认本次只执行此阶段）
+R0  审计现有仓库 + 更新项目文档（已验收）
           │
 R1  Qwen3-1.7B 独立 Thinker Backend + Tokenizer / Hidden States / Cache
           │
@@ -71,7 +75,7 @@ R5  Adaptive Bridge 消融       R6  Multimodal GRPO（顺序由用户届时决�
 R7  统一评测、系统优化、论文式报告与公开 Demo
 ```
 
-**阶段互斥约束**：R1/R2 可写测试与接口，但不得把无训练的 Qwen Omni logits 称为可用能力；R5/R6 不得在 R4 正式 SFT Baseline 未通过前启动。未经用户明确命令，Codex 每完成一阶段必须停止。
+**阶段互斥约束**：R1/R2 验收接口。R5-L/R6-L 可在各自获授权后验证通用代码与极小样本，正式 G5/G6 须等待 G4D 的 B1 验收。每完成一阶段等待用户授权下一阶段。
 
 ---
 
@@ -225,7 +229,7 @@ Speaker embedding (optional/frozen encoder → trainable projection) ───�
 - Checkpoint **分离来源**：旧 `sft_omni_768.pth` 只能按历史架构复现；新 1.7B 的 run 记录基础模型 ID + revision、LoRA 和新模块权重，禁止通过 `strict=False` 静默漏载。
 - Resume 恢复 optimizer、scaler、RNG、数据游标、冻结分组、模型/数据 revision；不同 Tokenizer/Audio Codec 的检查点不得混载。
 
-### 3.6 文档更新与不可变历史
+### 3.6 v2.0 文档更新记录与不可变历史
 
 | 文档/目录 | Codex 必须采取的行为 |
 |---|---|
@@ -450,7 +454,7 @@ R5 设计必须包含：
 
 ### 启动与权限
 
-- **只执行用户指定的一个阶段**，默认现在仅 **R0**。开始阶段时先输出“目标、当前代码依据、拟改文件表、风险和测试计划”；执行后输出实测结果并停止。
+- **只执行用户指定的一个阶段**。开始阶段时先输出“目标、当前代码依据、拟改文件表、风险和测试计划”；执行后输出实测结果并停止。v2.1 本地与云端分别验收，后续顺序见执行附录。
 - 只允许小规模、明确授权的模型下载/数据准备/训练；**R0 不下载、不训练、不重构大模型**；R1–R4 的下载/正式训练也只按该阶段的用户指令执行，不因计划中出现命令而自动执行。
 - 不准暗改核心算法；重要变更（改变 Talker 参数规模、换 Codec、改 loss 语义、改特殊 Token 协议、弃用旧训练路径）必须说明理由并获用户决定。
 - 已有工作区变更先保护；每一阶段结束保留可复现 Git commit/tag（是否推送由用户决定），不自动 push/删除历史。
@@ -514,7 +518,7 @@ git diff --exit-code -- docs/stages/P0.md docs/stages/P1.md docs/stages/P2.md do
 
 ---
 
-## R0｜审计现有仓库、更新文档、确定迁移清单（**现在只做这一阶段**）
+## R0｜审计现有仓库、更新文档、确定迁移清单（历史验收）
 
 ### 已有基础与目标
 
@@ -588,15 +592,17 @@ R1 的 Qwen Backend 数值/Cache 已验收；P2/P3/P5 旧逻辑保持可运行�
 
 ### 通过标准
 
-- [ ] 真实/替身多模态输入的 shape、索引、Mask、finite logits、梯度检查通过。
-- [ ] 同版本 Mimi 8-codebook delay `encode→shift→restore` 可逆，训练标记与生成状态机一致。
-- [ ] Qwen Omni 新路径的短/长输入不崩溃；PCM Chunk/尾块/Cache 生命周期正确（**音质/语义质量暂不验收**）。
-- [ ] 旧 P2/P3/P5 测试全部通过；`docs/stages/R2.md` 给出关键形状图与尚未训练限制。
-- [ ] 不使用旧 MiniMind SFT 权重直接宣称新 Qwen Omni 可工作；等待用户授权 R3。
+- [x] 真实/替身多模态输入的 shape、索引、Mask、finite logits、梯度检查通过。
+- [x] 同版本 Mimi 8-codebook delay `encode→shift→restore` 可逆，训练标记与生成状态机一致。
+- [x] Qwen Omni 新路径的短/长输入不崩溃；PCM Chunk/尾块/Cache 生命周期正确（**音质/语义质量暂不验收**）。
+- [x] 旧 P2/P3/P4/P5 真实回归通过；[R2 阶段报告](stages/R2.md) 给出关键形状图与尚未训练限制。
+- [x] Qwen Omni 使用独立初始化与验收记录；R3-L 单独授权。
 
 **阻塞处置**：如果联合时轴无法在现有 Delay 约定下正确覆盖文本和更长音频，必须记录最小失败样本、当前因果依赖和替代方案供用户决策；不得静默裁掉长音频或放弃相关 mask 测试。
 
 ---
+
+以下 R3–R7 保留 v2.0 的研究要求与正式验收定义。v2.1 把本地代码验收提前到相应 L 阶段。下文单卡 Profile、正式训练与研究效果的前置条件分别适用于 G3–G7。L 阶段使用执行附录和手册中的本地验收标准。 [v2.1 执行附录](#附录-c-v21-执行顺序与变更记录)
 
 ## R3｜数据工程、权重清单与单卡训练准备
 
@@ -766,9 +772,9 @@ R4 已有可验证 Omni Baseline；R5/R6 已完成或者明确记录未完成/�
 - 本阶段已停止，等待用户授权：是
 ```
 
-## 10.10 开工提示词（只需给 Codex 一次）
+## 10.10 开工提示词
 
-> 请阅读仓库 `AGENTS.md`、`docs/PROJECT_PLAN.md`、`README.md`、`docs/项目待办.md`、`docs/stages/P0.md`–`P5.md`，并以本文件的 **OmniPlus v2.0** 决策为准。现在只执行 **R0**：审计仓库真实文件/测试/资产状态，建立 v1→v2 文件级迁移表；保护历史；更新 README、项目规划、待办和 AGENTS；运行现有回归；提交 `docs/stages/R0.md`。**禁止修改 P0–P5 历史报告，禁止下载大型模型或数据，禁止训练，禁止自动进入 R1。**完成后列出实测结果和 R1 的具体待改文件，停在 R0。
+R2 的阶段提示词随 v2.1 执行包保留。v2.0 的 R0 开工提示词见原文存档。 [R2 提示词](../CODEX_R2_PROMPT.md) · [v2.0 存档](archive/PROJECT_PLAN-v2.0.md)
 
 ---
 
@@ -802,4 +808,17 @@ R4 已有可验证 Omni Baseline；R5/R6 已完成或者明确记录未完成/�
 
 ---
 
-**最终执行要求**：**下一步是 R0 文档与文件审计，不是重做 P0、不是真正启动 Qwen1.7B 训练。**完成 R0 后，Codex 才能在用户授权下按照 R1→R4 路线，把“已完成的 MiniMind Omni 工程”迁移成“已训练并可测的 Qwen Omni”，之后再开展两条研究主线。
+## 附录 C v2.1 执行顺序与变更记录
+
+| 阶段 | 本地代码与极小样本验收 | 云端正式训练与实验 |
+| --- | --- | --- |
+| R2 | 多模态接线、真实 T2A 时间轴、梯度、Cache 与 PCM 验收 | R2 的验收目标是架构与计算图 |
+| R3 | **R3-L**：独立样本划分、数据与资产 manifest、特征与声码缓存、准备入口和 checkpoint 规范 | **G3**：单卡 CUDA 短前后向和资源 Profile，确定预算 |
+| R4 | **R4-L**：极小样本验证 T2A、视觉与音频对齐、联合 SFT、梯度和恢复 | **G4**：按资源结果依次训练和验收；G4D 冻结 B1 并立即运行首轮正式 Benchmark |
+| R5 | **R5-L**：验证可替换 Bridge、候选实现与对照配置 | **G5**：B1 成立后由用户决定消融方案，按相同数据、底座与评测重训练 |
+| R6 | **R6-L**：验证通用 GRPO 数学、有效码本联合 logprob 与极小离线 rollout | **G6**：B1 成立后决定 Reward、更新范围与单卡或多卡方案，运行受控对照 |
+| R7 | 整理已验收的代码、指标与复现材料 | **G7**：统一 Benchmark、系统复测、最终报告与 Demo |
+
+本地通过记录在阶段报告与待办的本地栏。正式模型质量、研究效果和预算以云端实测单独记录。R3-L 以 R2 的样本协议、真实资产清单与 smoke 为入口，固定独立 split 和可复现数据命令，验证小样本的特征与声码缓存，并输出可供 R4-L 使用的批次和版本清单。 [双轨待办](项目待办.md) · [执行手册](OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md)
+
+2026-11-08 将本地代码实现与云端实训拆为两条验收轨道。Qwen3-1.7B、Fixed Bridge、4×768 Talker、8 Codebooks、多模态 SFT、Adaptive Bridge 和 GRPO 的研究定位继续沿用 v2.0。正式 Bridge 消融与 GRPO 实验配方等待 B1。修改前的 v2.0 主规划已逐字节归档，SHA-256 为 `0143b67b280f6d15acc2b82332bb82ce9bc50f3bb31f128dd149b2d3ae307ae4`。 [v2.0 原文](archive/PROJECT_PLAN-v2.0.md) · [v1 原文](archive/PROJECT_PLAN-v1.md)

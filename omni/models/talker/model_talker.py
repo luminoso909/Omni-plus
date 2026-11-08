@@ -56,7 +56,7 @@ class TalkerEmbedding(nn.Module):
 
 
 class TalkerModule(nn.Module):
-    def __init__(self, config: OmniPlusConfig) -> None:
+    def __init__(self, config: OmniPlusConfig, *, projected_condition: bool = False) -> None:
         super().__init__()
 
         # Talker 的头维度与 FFN 宽度独立计算，不沿用 Thinker 的 head_dim
@@ -93,11 +93,15 @@ class TalkerModule(nn.Module):
             nn.Linear(hidden, hidden),
             RMSNorm(hidden, config.rms_norm_eps),
         )
-        self.embed_proj = nn.Sequential(
-            nn.Linear(config.hidden_size, config.hidden_size),
-            nn.GELU(),
-            nn.Linear(config.hidden_size, hidden),
-            RMSNorm(hidden, config.rms_norm_eps),
+        self.embed_proj = (
+            nn.Identity()
+            if projected_condition
+            else nn.Sequential(
+                nn.Linear(config.hidden_size, config.hidden_size),
+                nn.GELU(),
+                nn.Linear(config.hidden_size, hidden),
+                RMSNorm(hidden, config.rms_norm_eps),
+            )
         )
         self.text_scale = nn.Parameter(torch.tensor(3.0))
         self.audio_scale = nn.Parameter(torch.tensor(1.0))
