@@ -14,6 +14,10 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
+2026-11-09 开发完成度审计：主体算法与本地训练工程已验收，正式数据供应、独立只读评测、全任务 Benchmark、统一性能计时和最终 Demo/发布仍有缺口。本轮 51 项定向测试、Ruff/格式/依赖检查通过；未重跑全仓或启动云端。代码可进入 **G3 部署与有限资源验收准备**，但需先补齐云端资产/数据/配置，不能直接正式训练。B1 首次 Benchmark 在 G4D 结束时执行，G7 进行最终复核。 [详细审计与 A–D 缺口清单](docs/reports/OMNIPLUS_DEVELOPMENT_AUDIT.md) · [G7 最终执行手册](docs/cloud/G7_FINAL_RUNBOOK.md)
+
+G3–G7 手册现已覆盖，未实现入口在 G7 手册中明确标注。G3 文档在当前用户工作区有尚未提交的路径迁移，历史 P5 部分脚本/报告也尚未跟踪；云端应使用选定的干净提交，完整公开交付前另行处理这些已有改动。本轮未将它们混入文档提交。
+
 ### 1 历史验收成果（Historical validated work）
 
 - MiniMind：复用本地 Dense/MoE 权重和配套 tokenizer，验收自研 Thinker。
