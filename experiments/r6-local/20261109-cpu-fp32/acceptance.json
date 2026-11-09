@@ -1,0 +1,115 @@
+{
+  "stage": "R6-L",
+  "date": "2026-11-09",
+  "status": "PASS_LOCAL_ONLY",
+  "base_commit": "c07f1dff5ed564c390f962754b53bf3962ee5077",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.15.0",
+    "transformers": "4.57.6",
+    "platform": "macOS arm64",
+    "device": "cpu",
+    "dtype": "float32",
+    "mps_available": false,
+    "cuda_executed": false,
+    "remote_ci_executed": false
+  },
+  "workspace_pytest": {
+    "command": "HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 MPLCONFIGDIR=/private/tmp/omni-r6-local/mpl .venv/bin/python -m pytest -q -p no:cacheprovider --basetemp=/private/tmp/omni-r6-local/pytest-final",
+    "passed": 399,
+    "skipped": 1,
+    "seconds": 129.02,
+    "log": "/private/tmp/omni-r6-local/pytest-final.log",
+    "log_sha256": "b68bc302315cbad68a3172c314dea705a41f1e4c28067ca6c2f23d62240ce35e"
+  },
+  "clean_checkout": {
+    "pytest": {
+      "command": "PYTHONPATH=/private/tmp/omni-r6-local/clean-checkout GIT_DIR=/Users/lucius/projects/personal/Omni++/.git HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 /Users/lucius/projects/personal/Omni++/.venv/bin/python -m pytest -q --basetemp=/private/tmp/omni-r6-local/clean-pytest-final",
+      "cwd": "/private/tmp/omni-r6-local/clean-checkout",
+      "returncode": 0,
+      "passed": 392,
+      "skipped": 1,
+      "elapsed_seconds": 119.37,
+      "skip_reason": "MPS unavailable on this host",
+      "log": "/private/tmp/omni-r6-local/clean-pytest-final.log"
+    },
+    "ruff": {
+      "check": {
+        "command": "ruff check .",
+        "returncode": 0
+      },
+      "format": {
+        "command": "ruff format --check omni scripts tests",
+        "returncode": 0,
+        "files": 85
+      }
+    },
+    "source_overlay_matches_current": true,
+    "fixture_lock_changes_in_clean_tree": false
+  },
+  "new_tests": {
+    "math": 22,
+    "rollout": 19,
+    "reward": 10,
+    "training": 19,
+    "integrity": 7,
+    "review": 3
+  },
+  "cli_commands_passed": 17,
+  "cli_fixture_notice": {
+    "scope": "Real unchanged CLI and real Tiny Qwen/Talker GRPO algorithm; synthetic asset identity fixture only.",
+    "not_validated": [
+      "Official Qwen 1.7B assets",
+      "real media encoder/codec loading",
+      "real speech quality",
+      "CUDA"
+    ],
+    "tokenizer": "Self-authored WordLevel fixture, not the official Qwen tokenizer.",
+    "inert_assets": "Weight-file placeholders are explicitly synthetic and never used by model or codec constructors; Tiny Qwen/Talker constructed and trained normally.",
+    "source": "Three original short text pairs, distinct train/validation/test; no external data.",
+    "reason": "External media disk unavailable; fixed source contract prevents arbitrary asset bypass in original checkout."
+  },
+  "original_assets_dry_run": {
+    "command": ".venv/bin/python scripts/run_experiment.py grpo-smoke --config configs/v2/r6_joint_local.yaml --dry-run",
+    "returncode": 1,
+    "reason": "External media volume not mounted; SenseVoiceSmall/model.pt missing",
+    "log": "/private/tmp/omni-r6-local/original-assets-dry-run.log"
+  },
+  "cached_t2a_probe": {
+    "command": "HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 .venv/bin/python /private/tmp/omni-r6-local/probe_cached.py",
+    "returncode": 0,
+    "summary": "cached-t2a.json",
+    "limitation": "Historical cached tensors and manifest verified; unavailable source media/model files not reverified."
+  },
+  "checkpoint_resume": {
+    "tensors": 519,
+    "non_tensor_leaves": 1775
+  },
+  "g3_g4_g5_g6_g7_executed": false,
+  "external_independent_review": false,
+  "final_checks": {
+    "ruff": {
+      "command": ".venv/bin/ruff check --no-cache .",
+      "returncode": 0,
+      "output": "All checks passed!"
+    },
+    "format": {
+      "command": ".venv/bin/ruff format --check --no-cache omni tests scripts",
+      "returncode": 0,
+      "output": "88 files already formatted"
+    },
+    "dependencies": {
+      "command": ".venv/bin/python -m pip check",
+      "returncode": 0,
+      "output": "WARNING: The directory '/Users/lucius/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\nNo broken requirements found."
+    },
+    "diff": {
+      "command": "git diff --check",
+      "returncode": 0
+    },
+    "documentation": {
+      "bash_yaml_json_blocks": 17,
+      "new_document_local_links": "passed"
+    }
+  }
+}

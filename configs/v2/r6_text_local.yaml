@@ -1,0 +1,37 @@
+# 本地真实 Qwen tokenizer + 随机 Tiny policy，诊断奖励只验证算法与工程。
+extends: r4d_local.yaml
+training:
+  tasks: [t2a]
+  steps: 2
+  accumulation_steps: 1
+  batch_size: 1
+  warmup_steps: 0
+  learning_rate: 0.001
+  group_lrs: {lora: 0.001}
+  task_weights: {}
+  sample_weights: {}
+  allow_diagnostic_a2a: false
+  eval_interval: 1
+  save_interval: 1
+grpo:
+  schema_version: 1
+  mode: text
+  group_size: 3
+  max_new_tokens: 10
+  temperature: 1.0
+  audio_temperature: 1.0
+  top_k: 0
+  top_p: 1.0
+  use_cache: true
+  clip: 0.2
+  kl_coef: 0.01
+  advantage_epsilon: 0.000001
+  normalization: sequence_mean
+  update_epochs: 1
+  trainable: [lora]
+  policy: {source: tiny_random, checkpoint: null, manifest: null, lineage: null}
+  reference: {source: policy_initial}
+  reward:
+    weights: {token_value: 1.0}
+  evaluation_split: validation
+  evaluation_prompts: 1

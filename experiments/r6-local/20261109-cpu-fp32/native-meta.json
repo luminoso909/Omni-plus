@@ -1,0 +1,128 @@
+{
+  "text": {
+    "groups": {
+      "thinker": {
+        "total": 1720574976,
+        "trainable": 0
+      },
+      "lora": {
+        "total": 802816,
+        "trainable": 802816
+      },
+      "vision_proj": {
+        "total": 5772800,
+        "trainable": 0
+      },
+      "audio_proj": {
+        "total": 5248000,
+        "trainable": 0
+      },
+      "bridge": {
+        "total": 1573632,
+        "trainable": 0
+      },
+      "talker": {
+        "total": 30680834,
+        "trainable": 0
+      },
+      "audio_embedding": {
+        "total": 7520256,
+        "trainable": 0
+      },
+      "speaker": {
+        "total": 147456,
+        "trainable": 0
+      },
+      "audio_heads": {
+        "total": 7520256,
+        "trainable": 0
+      }
+    },
+    "total": 1779841026,
+    "trainable": 802816
+  },
+  "audio": {
+    "groups": {
+      "thinker": {
+        "total": 1720574976,
+        "trainable": 0
+      },
+      "lora": {
+        "total": 802816,
+        "trainable": 0
+      },
+      "vision_proj": {
+        "total": 5772800,
+        "trainable": 0
+      },
+      "audio_proj": {
+        "total": 5248000,
+        "trainable": 0
+      },
+      "bridge": {
+        "total": 1573632,
+        "trainable": 1573632
+      },
+      "talker": {
+        "total": 30680834,
+        "trainable": 30680834
+      },
+      "audio_embedding": {
+        "total": 7520256,
+        "trainable": 7520256
+      },
+      "speaker": {
+        "total": 147456,
+        "trainable": 0
+      },
+      "audio_heads": {
+        "total": 7520256,
+        "trainable": 7520256
+      }
+    },
+    "total": 1779841026,
+    "trainable": 47294978
+  },
+  "joint": {
+    "groups": {
+      "thinker": {
+        "total": 1720574976,
+        "trainable": 0
+      },
+      "lora": {
+        "total": 802816,
+        "trainable": 802816
+      },
+      "vision_proj": {
+        "total": 5772800,
+        "trainable": 0
+      },
+      "audio_proj": {
+        "total": 5248000,
+        "trainable": 0
+      },
+      "bridge": {
+        "total": 1573632,
+        "trainable": 1573632
+      },
+      "talker": {
+        "total": 30680834,
+        "trainable": 30680834
+      },
+      "audio_embedding": {
+        "total": 7520256,
+        "trainable": 7520256
+      },
+      "speaker": {
+        "total": 147456,
+        "trainable": 0
+      },
+      "audio_heads": {
+        "total": 7520256,
+        "trainable": 7520256
+      }
+    },
+    "total": 1779841026,
+    "trainable": 48097794
+  }
+}

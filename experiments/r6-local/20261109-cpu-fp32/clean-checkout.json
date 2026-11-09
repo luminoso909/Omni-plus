@@ -1,0 +1,25 @@
+{
+  "pytest": {
+    "command": "PYTHONPATH=/private/tmp/omni-r6-local/clean-checkout GIT_DIR=/Users/lucius/projects/personal/Omni++/.git HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 /Users/lucius/projects/personal/Omni++/.venv/bin/python -m pytest -q --basetemp=/private/tmp/omni-r6-local/clean-pytest-final",
+    "cwd": "/private/tmp/omni-r6-local/clean-checkout",
+    "returncode": 0,
+    "passed": 392,
+    "skipped": 1,
+    "elapsed_seconds": 119.37,
+    "skip_reason": "MPS unavailable on this host",
+    "log": "/private/tmp/omni-r6-local/clean-pytest-final.log"
+  },
+  "ruff": {
+    "check": {
+      "command": "ruff check .",
+      "returncode": 0
+    },
+    "format": {
+      "command": "ruff format --check omni scripts tests",
+      "returncode": 0,
+      "files": 85
+    }
+  },
+  "source_overlay_matches_current": true,
+  "fixture_lock_changes_in_clean_tree": false
+}

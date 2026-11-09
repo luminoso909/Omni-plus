@@ -1,0 +1,287 @@
+{
+  "scope": "Actual archived lawful T2A prompts with real Qwen tokenizer contract; Tiny model numerical updates only",
+  "limitations": "Media disk unavailable. Cached tensors and original manifest hashes checked; external encoder/codec weights and raw media NOT reverified; no waveform decoding or quality claim.",
+  "manifest_sha256": "eee6a532a1522ed9782d21c9345e159d5d302fc01498a69c16bc54c5260f9bb0",
+  "cache_tensor_sha256": "30f698b31d4f4eef9fe032789570d33f60ebd24f91f3401c8701f4d17fe638b3",
+  "record_ids": [
+    "e3870c223cec8d5b23ad373e881bcfe4b0908039d26f45acaccc3746d7913757",
+    "3ce0ac917a3925e9d18163dfa45d4be135470819671e1ea91d20649cd7959beb"
+  ],
+  "data_provenance": {
+    "source_revision": "d6588e12ac2ac8ced65eb58a7d7b3eef4aa220de",
+    "source_license": [
+      "apache-2.0",
+      "gpl-3.0"
+    ],
+    "license_note": "官方卡未逐文件区分两项许可；子集仅本地诊断，不公开再分发。",
+    "qwen_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "encoder_revisions": {
+      "sensevoice": "local-sha256:218811976815c1673e1b852dc383d78987b229268f78e7ebd0a1fe67229c83dd",
+      "siglip": "local-sha256:c1e9cc19ed6704b87353ee00b9ff5d6191886d741898339984364f789c62810d",
+      "mimi": "local-sha256:7542ee039d3025d5089cf227d21df64b6b8eff08fcd376a11a1fbd178dd9d3f5"
+    },
+    "code_policy": "reencode_raw_question_audio; quarantine_all_imported_answer_codes",
+    "sampling_rates": {
+      "sensevoice": 16000,
+      "mimi": 24000
+    }
+  },
+  "results": {
+    "text": {
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "lora": {
+          "total": 896,
+          "trainable": 896
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 0
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 0
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 0
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 0
+        }
+      },
+      "metrics": {
+        "total": 1.043081283569336e-07,
+        "policy": 1.043081283569336e-07,
+        "kl": 0.0,
+        "clip_fraction": 0.0,
+        "ratio_mean": 1.0000000198682149,
+        "grad_norm": 0.10452042520046234,
+        "optimizer_updated": true
+      },
+      "gradient_groups": {
+        "lora": 0.021249990910291672
+      },
+      "frozen_unchanged": true,
+      "trainable_changed": true,
+      "reward": [
+        [
+          0.22935335338115692,
+          0.44140782952308655,
+          0.5232145190238953
+        ],
+        [
+          0.566878616809845,
+          0.4888998568058014,
+          0.6046960949897766
+        ]
+      ],
+      "advantages": [
+        -1.3617998361587524,
+        0.3505949079990387,
+        1.0112050771713257,
+        0.2776651680469513,
+        -1.3397135734558105,
+        1.0620477199554443
+      ],
+      "max_old_replay_error": 9.5367431640625e-07,
+      "prompt_lengths": [
+        34,
+        34,
+        34,
+        25,
+        25,
+        25
+      ]
+    },
+    "audio": {
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "lora": {
+          "total": 896,
+          "trainable": 0
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 1056
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 39362
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 204800
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 204800
+        }
+      },
+      "metrics": {
+        "total": 3.3527612688238895e-07,
+        "policy": 3.3527612688238895e-07,
+        "kl": 0.0,
+        "clip_fraction": 0.0,
+        "ratio_mean": 1.0000002483526864,
+        "grad_norm": 2.5617988109588623,
+        "optimizer_updated": true
+      },
+      "gradient_groups": {
+        "bridge": 0.0674997940659523,
+        "talker": 0.0803968608379364,
+        "audio_embedding": 0.004120783880352974,
+        "audio_heads": 0.033537451177835464
+      },
+      "frozen_unchanged": true,
+      "trainable_changed": true,
+      "reward": [
+        [
+          0.41323891282081604,
+          0.5292460918426514,
+          0.4964989423751831
+        ],
+        [
+          0.5022960305213928,
+          0.46402865648269653,
+          0.4860771894454956
+        ]
+      ],
+      "advantages": [
+        -1.3601572513580322,
+        1.0153666734695435,
+        0.34479057788848877,
+        1.1580071449279785,
+        -1.2819068431854248,
+        0.12389969080686569
+      ],
+      "max_old_replay_error": 7.62939453125e-06,
+      "prompt_lengths": [
+        34,
+        34,
+        34,
+        25,
+        25,
+        25
+      ]
+    },
+    "joint": {
+      "parameter_groups": {
+        "thinker": {
+          "total": 4880576,
+          "trainable": 0
+        },
+        "lora": {
+          "total": 896,
+          "trainable": 896
+        },
+        "vision_proj": {
+          "total": 27200,
+          "trainable": 0
+        },
+        "audio_proj": {
+          "total": 18496,
+          "trainable": 0
+        },
+        "bridge": {
+          "total": 1056,
+          "trainable": 1056
+        },
+        "talker": {
+          "total": 39362,
+          "trainable": 39362
+        },
+        "audio_embedding": {
+          "total": 204800,
+          "trainable": 204800
+        },
+        "speaker": {
+          "total": 6144,
+          "trainable": 0
+        },
+        "audio_heads": {
+          "total": 204800,
+          "trainable": 204800
+        }
+      },
+      "metrics": {
+        "total": -3.660718599945989e-06,
+        "policy": -3.660718599945989e-06,
+        "kl": 0.0,
+        "clip_fraction": 0.0,
+        "ratio_mean": 1.0000004768371582,
+        "grad_norm": 2.468580484390259,
+        "optimizer_updated": true
+      },
+      "gradient_groups": {
+        "lora": 0.07655037939548492,
+        "bridge": 0.0667378157377243,
+        "talker": 0.04941100999712944,
+        "audio_embedding": 0.003859730437397957,
+        "audio_heads": 0.04044370353221893
+      },
+      "frozen_unchanged": true,
+      "trainable_changed": true,
+      "reward": [
+        [
+          0.8188931941986084,
+          1.0305756330490112,
+          0.9748652577400208
+        ],
+        [
+          1.0096566677093506,
+          1.0099742412567139,
+          0.9989626407623291
+        ]
+      ],
+      "advantages": [
+        -1.3678706884384155,
+        0.9948437809944153,
+        0.37302693724632263,
+        0.6757286787033081,
+        0.7377704381942749,
+        -1.413475751876831
+      ],
+      "max_old_replay_error": 1.52587890625e-05,
+      "prompt_lengths": [
+        34,
+        34,
+        34,
+        25,
+        25,
+        25
+      ]
+    }
+  }
+}

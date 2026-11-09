@@ -9,7 +9,8 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 | ✅ 已验收（本地训练工程） | R3-L：四任务各 8 条诊断样本、版本化缓存、tiny 参数更新及新进程完整恢复 |
 | ✅ 已验收（本地 SFT 实现） | R4-L：T2A、独立 Projector、联合 LoRA、验证/生成与完整恢复；222 项回归通过 |
 | ✅ 本地最终验收 PASS | R5-L：四种 Bridge、训练恢复与评测，两个 P1 已关闭，P2 成本汇总保持通过。 [最终报告](docs/reviews/R5-L_FINAL_FIX_REPORT.md) |
-| 🧪 待实测 | 本地 R6-L。云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark |
+| ✅ 本地最终验收 PASS | R6-L：Text / Audio / Joint GRPO 数学、Tiny 更新、跨进程恢复与数据/源码隔离。 [阶段报告](docs/stages/R6-local.md) · [同轮自审](docs/reviews/R6-L_FINAL_REVIEW.md) |
+| 🧪 待实测 | 云端 G3–G7 的资源测试、B1 正式训练、研究实验与 Benchmark；当前停在 G3 部署入口 |
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
@@ -120,6 +121,14 @@ python scripts/run_experiment.py resume --config configs/v2/r4d_local.yaml --ste
 每任务的采样比例、Loss 权重、batch 和模块 LR 分别配置；保存完整 Checkpoint 和独立多模态/LoRA Adapter。统一 JSONL 支持经审计的原始目标录音，不直接导入未知版本 codes。真实 Tiny T2A 同一 6 条训练样本 Loss 下降 4.52%；这只是局部优化证据。预测 WAV 已走通 Mimi/本地 ASR，但未达到音质验收，不能称 B1 已成立。实际命令、限制与 G4 入口见 [R4-L 报告](docs/stages/R4-local.md) · [G4 云端说明](docs/cloud/G4_SFT_RUNBOOK.md)。
 
 R5-L 用 `model.bridge` 选择候选与零基 Qwen Block。四组共享训练入口、数据和预算。`bridge_ablation.py plan` 生成独立配置，`collect` 汇总匹配的终点 Checkpoint 和评测产物。G5 等待 B1 和正式方案。 [R5-L 报告](docs/stages/R5-local.md) · [G5 操作说明](docs/cloud/G5_BRIDGE_RUNBOOK.md)
+
+R6-L 复用现有模型、采样游标、Optimizer 和 Checkpoint，增加 `grpo-smoke/train/resume/evaluate/profile`。八码本按物理时间步求联合 logprob；Reference 固定为初始 Policy，采样与目标使用相同正温度分布，当前明确拒绝 Top-k/Top-p 截断。完整定义与手算例见 [GRPO 数学说明](docs/GRPO_MATH.md)。无需大型资产的 Tiny 验收：
+
+```bash
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m pytest -q tests/test_r6_*.py
+```
+
+全仓本地回归 **399 passed, 1 skipped**（沙箱无 MPS）；排除用户既有改动的干净归档 **392 passed, 1 skipped**。实际 CLI 三模式各完成两步，Joint 连续更新与新进程恢复逐项一致；原配置的外置媒体盘未挂载，本轮未重新验收真实编码器/Mimi/ASR。已有许可 T2A 缓存另完成 Tiny 更新，不能据此宣称正式 RL 或音质提升。云端命令、严格数据谱系与 B1 对照见 [G6 操作说明](docs/cloud/G6_GRPO_RUNBOOK.md)。
 
 ### 5 流式推理
 

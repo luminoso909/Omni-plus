@@ -1,0 +1,8 @@
+# 仅音频策略更新，文本策略保持冻结。
+extends: r6_text_local.yaml
+grpo:
+  mode: audio
+  max_new_tokens: 12
+  trainable: [bridge, talker, audio_embedding, audio_heads]
+  reward:
+    weights: {audio_value: 1.0}

@@ -4,6 +4,8 @@
 > **依据**：已上传的 `PROJECT_PLAN.md`（v2.0）、P0–P5 阶段报告及此前讨论；**带“建议/估算”的数据比例、参数与训练时间未经本项目正式验证**。  
 > **状态更新（2026-11-08）**：R5-L 完成四种 Bridge 本地实现、共同初始化、恢复与对照矩阵。正式选层和预算待 B1 验收后确定。下文带估算的数值继续作为规划参考。 [R5-L 报告](stages/R5-local.md)
 
+> **补充（2026-11-09）**：R6-L 的 Text / Audio / Joint GRPO 数学、Tiny 更新、冻结与跨进程恢复本地 PASS；使用物理步联合概率、完整合法支持集温度分布、精确条件 KL。正式 Reward、比例、超参数与单双卡方案仍待 B1/G6 决定。旧真实媒体盘当前不可用，不把缓存更新与 fixture 接口测试称为重新验收 Mimi/ASR。 [R6-L 报告](stages/R6-local.md) · [G6 手册](cloud/G6_GRPO_RUNBOOK.md)
+
 ## 1. 这个项目究竟是什么？
 
 **一句话**：以**官方非 Base 的 Qwen3-1.7B**为预训练 Thinker，冻结外部视觉、语音与神经音频 Codec，自主实现/训练多模态 Projectors、Fixed Bridge、4×768 Talker/八码本声学预测头；先得到可信的 **B1：Qwen Omni SFT Baseline**，再分别研究 **Adaptive Bridge** 与 **Multimodal GRPO**，最后完成系统与质量 Benchmark。

@@ -1,0 +1,168 @@
+{
+  "checkpoint_exact": {
+    "tensors": 519,
+    "non_tensor_leaves": 1775
+  },
+  "runs": {
+    "smoke-text": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 0,
+      "step": 2,
+      "policy_version": 2,
+      "frozen_before": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "frozen_after": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "trainable_before": "63c91a0c762db353feabb219aebb23cad5a2b8b1e2df339e221147437760b446",
+      "trainable_after": "26e7c46d5e19d4f1303fafb6eb2de000f7a84f13d38b6ce36f3a0dc3385f5d22",
+      "gradient_groups": {
+        "lora": 0.03161913529038429
+      }
+    },
+    "smoke-audio": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 0,
+      "step": 2,
+      "policy_version": 2,
+      "frozen_before": "93bc6fea4e667e7f69ce48719a8f982f68e8af625d72c72eb67792bf2074f07d",
+      "frozen_after": "93bc6fea4e667e7f69ce48719a8f982f68e8af625d72c72eb67792bf2074f07d",
+      "trainable_before": "ba94d1625f4a6ac3e49299f8c356fc83ed5a3d10d2cfdf6afda6d0c057ae3466",
+      "trainable_after": "e40e95baf67c3edd89599b610f0eb1dd13f252a8135965df2e2eacb20e4fd673",
+      "gradient_groups": {
+        "bridge": 0.1398119032382965,
+        "talker": 0.1000208854675293,
+        "audio_embedding": 0.011337163858115673,
+        "audio_heads": 0.20921316742897034
+      }
+    },
+    "smoke-joint": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 0,
+      "step": 2,
+      "policy_version": 2,
+      "frozen_before": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "frozen_after": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "trainable_before": "e8b1e0a9ba50d7ef979cb6533b34dfdd104ea5b7ac2609cd8e4fd404f5e83604",
+      "trainable_after": "32b0aba09c81256db70fd0acc7fabad1bdaa720e0f2e106a7e891124aaba7d19",
+      "gradient_groups": {
+        "lora": 0.1329486221075058,
+        "bridge": 0.12026111036539078,
+        "talker": 0.0895058810710907,
+        "audio_embedding": 0.010350745171308517,
+        "audio_heads": 0.18640297651290894
+      }
+    },
+    "joint-part": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 0,
+      "step": 1,
+      "policy_version": 1,
+      "frozen_before": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "frozen_after": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "trainable_before": "e8b1e0a9ba50d7ef979cb6533b34dfdd104ea5b7ac2609cd8e4fd404f5e83604",
+      "trainable_after": "f8e8b006204d2db6db493db2d1c4e2910ed56adde0bd921409fc4088afd0477e",
+      "gradient_groups": {
+        "lora": 0.12723542749881744,
+        "bridge": 0.09040370583534241,
+        "talker": 0.0895058810710907,
+        "audio_embedding": 0.010350745171308517,
+        "audio_heads": 0.18640297651290894
+      }
+    },
+    "joint-resume": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 1,
+      "step": 2,
+      "policy_version": 2,
+      "frozen_before": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "frozen_after": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "trainable_before": "f8e8b006204d2db6db493db2d1c4e2910ed56adde0bd921409fc4088afd0477e",
+      "trainable_after": "32b0aba09c81256db70fd0acc7fabad1bdaa720e0f2e106a7e891124aaba7d19",
+      "gradient_groups": {
+        "lora": 0.1329486221075058,
+        "bridge": 0.12026111036539078,
+        "talker": 0.07624664902687073,
+        "audio_embedding": 0.01006506197154522,
+        "audio_heads": 0.17314013838768005
+      }
+    },
+    "baseline-evaluate": {
+      "status": "evaluated",
+      "split": "validation",
+      "start_step": 0,
+      "step": 0,
+      "policy_version": 0,
+      "frozen_before": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "frozen_after": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "trainable_before": "e8b1e0a9ba50d7ef979cb6533b34dfdd104ea5b7ac2609cd8e4fd404f5e83604",
+      "trainable_after": "e8b1e0a9ba50d7ef979cb6533b34dfdd104ea5b7ac2609cd8e4fd404f5e83604",
+      "gradient_groups": {}
+    },
+    "endpoint-evaluate": {
+      "status": "evaluated",
+      "split": "validation",
+      "start_step": 2,
+      "step": 2,
+      "policy_version": 2,
+      "frozen_before": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "frozen_after": "eb8585914786445c38e201e3a8313f59f14a682e249da14120aeac4e0adfa94a",
+      "trainable_before": "32b0aba09c81256db70fd0acc7fabad1bdaa720e0f2e106a7e891124aaba7d19",
+      "trainable_after": "32b0aba09c81256db70fd0acc7fabad1bdaa720e0f2e106a7e891124aaba7d19",
+      "gradient_groups": {}
+    },
+    "profile-text": {
+      "status": "passed",
+      "split": "train",
+      "start_step": 0,
+      "step": 1,
+      "policy_version": 1,
+      "frozen_before": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "frozen_after": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "trainable_before": "63c91a0c762db353feabb219aebb23cad5a2b8b1e2df339e221147437760b446",
+      "trainable_after": "34a392a5a04e225961917466a20c6f413081b18fa1ce4e5951c7508523c0a191",
+      "gradient_groups": {
+        "lora": 0.024310775101184845
+      }
+    },
+    "train-text": {
+      "status": "passed",
+      "step": 1,
+      "frozen_before": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "frozen_after": "c855eb96806b5dca652e397cf3363a0467973fd778cc55ff56da3c592c40ffc7",
+      "trainable_before": "63c91a0c762db353feabb219aebb23cad5a2b8b1e2df339e221147437760b446",
+      "trainable_after": "34a392a5a04e225961917466a20c6f413081b18fa1ce4e5951c7508523c0a191",
+      "gradient_groups": {
+        "lora": 0.024310775101184845
+      }
+    }
+  },
+  "evaluation_protocol": {
+    "same_config_seed_split": true,
+    "record_ids": [
+      "self-authored-validation",
+      "self-authored-validation",
+      "self-authored-validation"
+    ],
+    "baseline_metrics": [
+      {
+        "step": 0,
+        "reward_mean": 0.9927909970283508,
+        "reward_std": 0.040881454944610596,
+        "trajectories": 3
+      }
+    ],
+    "endpoint_metrics": [
+      {
+        "step": 2,
+        "reward_mean": 1.0086640119552612,
+        "reward_std": 0.023229410871863365,
+        "trajectories": 3
+      }
+    ]
+  },
+  "prepare_cache_hit": true,
+  "cli_commands": 17
+}

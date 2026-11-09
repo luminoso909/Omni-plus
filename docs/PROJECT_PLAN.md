@@ -2,7 +2,7 @@
 
 > **文档类型**：项目主规划。下文保留 v2.0 的架构、研究设计和验收标准，执行顺序见 v2.1 执行附录。<br>
 > **版本 / 日期**：v2.1 / 2026-11-08<br>
-> **状态**：R5-L 最终修复与本地验收 PASS，两个 P1 已关闭，P2 保持通过。R6-L 待授权，G3 与正式训练尚未执行。 [最终报告](reviews/R5-L_FINAL_FIX_REPORT.md)<br>
+> **状态**：R5-L 最终修复 PASS；R6-L 数学、Tiny 训练与完整恢复本地验收 PASS。当前停在 G3 云 GPU 部署入口，正式训练尚未执行。 [R5 最终报告](reviews/R5-L_FINAL_FIX_REPORT.md) · [R6 本地报告](stages/R6-local.md)<br>
 > **研究定位**：**以 Qwen3-1.7B 为主 Thinker，自主构建并训练轻量级 Thinker–Bridge–Talker Omni 模型；在可靠的多模态 SFT Baseline 上研究 Adaptive Bridge 与 Multimodal GRPO。**  
 > **最重要的要求**：**继承 P0–P5、最小改造、阶段验收、严格归因、历史只读。**
 
@@ -13,7 +13,7 @@
 你现在接手的是**已经完成 P0–P5 的现有仓库**，不是空仓库。不要重新初始化，不要从头再做 MiniMind-O，也不要在没有审计仓库的情况下用新代码覆盖旧实现。
 
 1. 首先读取仓库 `README.md`、`AGENTS.md`、`docs/PROJECT_PLAN.md`、`docs/项目待办.md`、两份 v2.1 配套规划及已验收阶段报告，并检查 `omni/`、`configs/`、`scripts/`、`tests/`、`experiments/` 与 Git 状态。
-2. **每次只执行用户授权的一阶段**。R5-L 本地代码与 Tiny 验收已完成，后续阶段、资源下载、正式训练与云任务分别取得授权。
+2. **每次只执行用户授权的一阶段**。R6-L 本地代码与 Tiny 验收已完成，后续阶段、资源下载、正式训练与云任务分别取得授权。
 3. 把 `docs/stages/P0.md`–`P5.md` 当作不可修改的历史证据：**不得编辑、移动、重命名、格式化、覆盖、追加内容或删除**。原始实验记录、权重与成果同样不得覆盖；历史脚本必须继续可复现。
 4. 将主线从“MiniMind Dense/MoE 复现 → Qwen 扩容”更新成 **“已有 MiniMind 成果归档 → Qwen3-1.7B 主干迁移 → Omni 对齐/SFT Baseline → Adaptive Bridge / Multimodal GRPO → 评测”**。MiniMind 实现仍保留作历史兼容测试和架构参考，**不再是必须正式训练或并行研究的 Baseline**。
 5. 先给出**实际文件级清单**与修改理由；完成授权阶段后执行测试、提交 `docs/stages/R0.md`（后续为 `R1.md`…），更新 `README.md` 与 `docs/项目待办.md`，报告变更与未解决问题；然后停止。
@@ -720,6 +720,14 @@ R4 的 B1 SFT Baseline 已冻结，拥有独立验证/测试集。现在才由�
 
 ## R6｜Multimodal GRPO 研究（策略/预算到此时决定）
 
+### v2.1 本地验收（R6-L）
+
+- [x] 固定概率分解、组优势、Clipped Objective、精确条件 KL、归一化和 EOS/STOP/Delay Mask；独立手算、解析梯度与数值差分通过。
+- [x] Text / Audio / Joint 共用训练工程，LoRA、Projector、Fixed/Adaptive Bridge 与 Talker 更新、冻结边界通过。
+- [x] 实际 Tiny CLI、有限真实 T2A 缓存更新、完整 Checkpoint/新进程恢复、数据与源码身份拒绝测试通过。
+- [x] 全仓 399 passed、1 skipped；干净归档 392 passed、1 skipped。 [本地报告](stages/R6-local.md) · [同轮自审](reviews/R6-L_FINAL_REVIEW.md) · [G6 手册](cloud/G6_GRPO_RUNBOOK.md)
+- [ ] 原配置外置媒体资产恢复后重验真实 Mimi/ASR；G6 的原生 CUDA/BF16、正式 Reward、任务比例、质量对照和资源方案待验收 B1 后决定。
+
 ### 前置条件
 
 有 R4 的稳定 B1 SFT Checkpoint 与可用可验证 Reward/评测集；正式启动前**先让用户选任务、奖励、参数更新范围和单/多卡方案**。
@@ -734,7 +742,7 @@ R4 的 B1 SFT Baseline 已冻结，拥有独立验证/测试集。现在才由�
 
 ### 验收 / 交付
 
-- [ ] 算法目标的数值/概率/掩码单测、rollout 与梯度检查完成。
+- [x] 算法目标的数值/概率/掩码单测、rollout 与梯度检查完成（R6-L 本地范围，非正式模型训练）。
 - [ ] 受控 SFT vs RL 实验真实执行；记录有无收益和稳定性，不捏造提升。
 - [ ] `docs/stages/R6.md`、Checkpoint/配置、原始日志/对照图、失败分析；资源不足时给出可核验 partial，不虚称完成。
 
@@ -850,3 +858,5 @@ R2 的阶段提示词随 v2.1 执行包保留。v2.0 的 R0 开工提示词见�
 本地通过记录在阶段报告与待办的本地栏。正式模型质量、研究效果和预算以云端实测单独记录。R3-L 以 R2 的样本协议、真实资产清单与 smoke 为入口，固定独立 split 和可复现数据命令，验证小样本的特征与声码缓存，并输出可供 R4-L 使用的批次和版本清单。 [双轨待办](项目待办.md) · [执行手册](OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md)
 
 2026-11-08 将本地代码实现与云端实训拆为两条验收轨道。Qwen3-1.7B、Fixed Bridge、4×768 Talker、8 Codebooks、多模态 SFT、Adaptive Bridge 和 GRPO 的研究定位继续沿用 v2.0。正式 Bridge 消融与 GRPO 实验配方等待 B1。修改前的 v2.0 主规划已逐字节归档，SHA-256 为 `0143b67b280f6d15acc2b82332bb82ce9bc50f3bb31f128dd149b2d3ae307ae4`。 [v2.0 原文](archive/PROJECT_PLAN-v2.0.md) · [v1 原文](archive/PROJECT_PLAN-v1.md)
+
+2026-11-09 完成 R6-L 本地闭环与同轮自审，保留 R0–R5-L 和 P0–P5 历史原文。G3–G7 仍未执行，Tiny 的数学/工程 PASS 不表示 B1 或 GRPO 收益成立。

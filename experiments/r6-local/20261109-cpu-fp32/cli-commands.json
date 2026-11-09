@@ -1,0 +1,367 @@
+[
+  {
+    "name": "prepare-initial",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "prepare",
+      "--config",
+      "fixture/prepare.yaml"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.4171555,
+    "stdout": "/private/tmp/omni-r6-local/portable-prepare.json",
+    "timing_source": "exec_command.wall_time_seconds"
+  },
+  {
+    "name": "dry-text",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/text.yaml",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.454851166985463
+  },
+  {
+    "name": "smoke-text",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/text.yaml",
+      "--run-dir",
+      "fixture/runs/text"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.360460166004486
+  },
+  {
+    "name": "dry-audio",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/audio.yaml",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 5.002358124998864
+  },
+  {
+    "name": "smoke-audio",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/audio.yaml",
+      "--run-dir",
+      "fixture/runs/audio"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.774981833004858
+  },
+  {
+    "name": "dry-joint",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/joint.yaml",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.757508958980907
+  },
+  {
+    "name": "smoke-joint",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/joint.yaml",
+      "--run-dir",
+      "fixture/runs/joint"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 5.245573583000805
+  },
+  {
+    "name": "joint-part",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-smoke",
+      "--config",
+      "fixture/joint.yaml",
+      "--run-dir",
+      "fixture/runs/joint-part",
+      "--steps",
+      "1"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.770975457999157
+  },
+  {
+    "name": "dry-resume",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-resume",
+      "--config",
+      "fixture/joint.yaml",
+      "--resume",
+      "fixture/runs/joint-part/step-000001.pt",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.726171874994179
+  },
+  {
+    "name": "joint-resume",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-resume",
+      "--config",
+      "fixture/joint.yaml",
+      "--resume",
+      "fixture/runs/joint-part/step-000001.pt",
+      "--run-dir",
+      "fixture/runs/joint-resume",
+      "--steps",
+      "2"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.560445540992077
+  },
+  {
+    "name": "dry-baseline",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-evaluate",
+      "--config",
+      "fixture/joint.yaml",
+      "--baseline",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 5.157738291978603
+  },
+  {
+    "name": "baseline-evaluate",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-evaluate",
+      "--config",
+      "fixture/joint.yaml",
+      "--baseline",
+      "--run-dir",
+      "fixture/runs/baseline-evaluate"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.3911956250085495
+  },
+  {
+    "name": "dry-evaluate",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-evaluate",
+      "--config",
+      "fixture/joint.yaml",
+      "--resume",
+      "fixture/runs/joint/step-000002.pt",
+      "--dry-run"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 5.379773416992975
+  },
+  {
+    "name": "endpoint-evaluate",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-evaluate",
+      "--config",
+      "fixture/joint.yaml",
+      "--resume",
+      "fixture/runs/joint/step-000002.pt",
+      "--run-dir",
+      "fixture/runs/endpoint-evaluate"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.40253454100457
+  },
+  {
+    "name": "profile-text",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-profile",
+      "--config",
+      "fixture/text.yaml",
+      "--run-dir",
+      "fixture/runs/profile-text",
+      "--steps",
+      "1"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 5.2274518749909475
+  },
+  {
+    "name": "prepare-cache-hit",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "prepare",
+      "--config",
+      "fixture/prepare.yaml"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 3.975350291992072
+  },
+  {
+    "name": "train-text",
+    "command": [
+      "/Users/lucius/projects/personal/Omni++/.venv/bin/python",
+      "scripts/run_experiment.py",
+      "grpo-train",
+      "--config",
+      "fixture/text.yaml",
+      "--run-dir",
+      "fixture/runs/train-text",
+      "--steps",
+      "1"
+    ],
+    "cwd": "/private/tmp/omni-r6-local/portable-fixture",
+    "env": {
+      "PYTHONPATH": "/private/tmp/omni-r6-local/portable-fixture",
+      "HF_HUB_OFFLINE": "1",
+      "OMP_NUM_THREADS": "1",
+      "TOKENIZERS_PARALLELISM": "false"
+    },
+    "returncode": 0,
+    "elapsed_seconds": 4.3228887080040295
+  }
+]

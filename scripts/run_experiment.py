@@ -26,7 +26,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
-        choices=["inspect", "prepare", "smoke", "train", "resume", "evaluate", "demo", "profile"],
+        choices=[
+            "inspect",
+            "prepare",
+            "smoke",
+            "train",
+            "resume",
+            "evaluate",
+            "demo",
+            "profile",
+            "grpo-smoke",
+            "grpo-train",
+            "grpo-resume",
+            "grpo-evaluate",
+            "grpo-profile",
+        ],
     )
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument(
@@ -34,8 +48,34 @@ def main() -> None:
     )
     parser.add_argument("--run-dir", type=Path, help="全新结果目录；历史运行目录不能覆盖")
     parser.add_argument("--resume", type=Path, help="恢复或评估使用的完整 Checkpoint")
+    parser.add_argument("--baseline", action="store_true", help="GRPO 评测配置指定的初始策略")
     parser.add_argument("--steps", type=int, help="目标总 optimizer steps，含已恢复步数")
     args = parser.parse_args()
+    if args.command.startswith("grpo-"):
+        from omni.training.r6_local import inspect_run, read_grpo_settings, run_grpo
+
+        settings = read_grpo_settings(ROOT / args.config, ROOT)
+        if not args.dry_run and args.run_dir is None:
+            parser.error("GRPO 执行需要新的 --run-dir")
+        options = dict(
+            resume=ROOT / args.resume if args.resume else None,
+            steps=args.steps,
+            command=args.command,
+            baseline=args.baseline,
+        )
+        result = (
+            inspect_run(
+                settings, ROOT, run_dir=ROOT / args.run_dir if args.run_dir else None, **options
+            )
+            if args.dry_run
+            else run_grpo(settings, ROOT, ROOT / args.run_dir, **options)
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
+    if args.baseline:
+        parser.error("--baseline 仅用于 grpo-evaluate")
+
     training_commands = {"smoke", "train", "resume", "profile"}
     if args.command in {"inspect", "prepare"} and any(
         value is not None for value in (args.resume, args.steps, args.run_dir)

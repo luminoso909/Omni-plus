@@ -2,8 +2,8 @@
 
 > **文档性质**：对 `docs/PROJECT_PLAN.md`（v2.0）的**执行顺序补充**，不是推翻模型架构与研究目标。  
 > **使用对象**：本人 + Codex；先本地实现、极小样本验证所有训练/评测模块，再在云端按顺序启动真实训练与研究实验。  
-> **状态更新（2026-11-08）**：R5-L 本地代码与 Tiny 验收已完成。 [R5-L 报告](stages/R5-local.md) · [G5 操作说明](cloud/G5_BRIDGE_RUNBOOK.md)
-> **下一步**：R5-L 最终修复验收 PASS，等待用户授权 R6-L。G5 正式消融须先有 B1。 [最终修复报告](reviews/R5-L_FINAL_FIX_REPORT.md)
+> **状态更新（2026-11-09）**：R5-L 最终修复与 R6-L 本地数学、Tiny 更新和完整恢复均 PASS。 [R6-L 报告](stages/R6-local.md) · [同轮自审](reviews/R6-L_FINAL_REVIEW.md)
+> **下一步**：停在 G3 云 GPU 部署入口，等待授权；G5/G6 正式实验须先有 B1。 [G6 操作说明](cloud/G6_GRPO_RUNBOOK.md)
 
 ---
 
@@ -60,6 +60,8 @@
 ## 2. 需要 Codex 提供的稳定 CLI 契约（**待实现，并非当前仓库已存在**）
 
 2026-11-08 已落实 `scripts/run_experiment.py inspect/prepare/smoke/train/resume/evaluate/demo/profile --config ...`。当前使用 `--run-dir`、`--resume CHECKPOINT`、`--steps`、`--dry-run`；设备、样本预算在 YAML 设置。参数统计为 meta 模型；恢复写新 run。Adapter 随运行导出并有严格加载 API，没有单独 `export` 子命令。下方旧示例的 `--run-id/--checkpoint/--device` 等不是当前参数，勿直接复制；真实可执行命令见 [R4-L 报告](stages/R4-local.md)。
+
+2026-11-09 增加 `grpo-smoke/grpo-train/grpo-resume/grpo-evaluate/grpo-profile`，复用同一薄 CLI。`grpo-evaluate --baseline` 评估初始 SFT，`--resume` 评估 RL 终点；两者用同一独立 seed、split 与生成协议。数据准备继续使用不带 `grpo` 键的 SFT YAML。R6-L 的完整支持集温度采样、精确条件 KL、单设备更新和完整边界恢复已通过 Tiny；Top-k/Top-p 截断、梯度检查点和多卡未实现，明确拒绝不支持的配置。原媒体盘未挂载时不跳过资产检查，缓存 API 与隔离 fixture 的实测分别记录。 [数学定义](GRPO_MATH.md) · [真实入口和 G6 操作步骤](cloud/G6_GRPO_RUNBOOK.md)
 
 先审计并尽量复用已有 `scripts/train_sft.py`、`scripts/prepare_p4.py`、`omni/training/`、`omni/inference/`。**推荐新增一层薄 CLI 包装**，而不是重写模型/训练器。最终命令名称应由 Codex 实施并写入 README 和每阶段报告；以下是要求落实的**目标接口**，执行前必须在真实仓库中通过 `--help` 和 smoke 证明它们存在。
 
@@ -415,4 +417,4 @@ R5 与 R6 以**同一个冻结 B1**为研究起点，可以分别执行；两者
 - Hugging Face PEFT/LoRA 集成：<https://huggingface.co/docs/transformers/peft>
 - 本项目现有历史事实与正式研究边界：`docs/PROJECT_PLAN.md`、`docs/stages/P0.md`–`P5.md`、`docs/stages/R0.md`、`R1.md`（以实际仓库为准）。
 
-**R5-L 最终修复与本地验收已通过。当前停在 R6-L 入口，R6-L 和云端各阶段分别授权。**
+**R6-L 本地最终验收 PASS，当前停在 G3 入口。云端 Profile、B1、正式消融及 GRPO 收益仍未执行，各阶段分别授权。**

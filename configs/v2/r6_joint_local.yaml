@@ -1,0 +1,8 @@
+# 文本与8-Codebook的联合动作概率；复用同一GRPO更新器。
+extends: r6_text_local.yaml
+grpo:
+  mode: joint
+  max_new_tokens: 12
+  trainable: [lora, bridge, talker, audio_embedding, audio_heads]
+  reward:
+    weights: {token_value: 1.0, audio_value: 1.0}

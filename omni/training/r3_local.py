@@ -51,6 +51,7 @@ def merge_settings(path: Path, parents: tuple[Path, ...] = ()) -> dict:
                     "task_batch_sizes",
                     "group_lrs",
                     "bridge",
+                    "weights",
                 }
                 else value
             )
@@ -59,7 +60,7 @@ def merge_settings(path: Path, parents: tuple[Path, ...] = ()) -> dict:
     return merge(base, values)
 
 
-def read_settings(path: Path, root: Path) -> dict:
+def read_settings(path: Path, root: Path, *, allow_grpo: bool = False) -> dict:
     settings = merge_settings(path)
     version = settings.get("schema_version")
     allowed = {
@@ -86,6 +87,8 @@ def read_settings(path: Path, root: Path) -> dict:
         },
         "lora": {"enabled"},
     }
+    if allow_grpo:
+        allowed["root"].add("grpo")
     if version == 2:
         allowed["root"] |= {"evaluation"}
         allowed["data"] |= {"audited_manifest", "audited_manifest_sha256"}

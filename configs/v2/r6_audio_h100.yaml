@@ -1,0 +1,8 @@
+# 待云端验收；ASR 回转写使用锁定本地 Mimi/SenseVoice，配方由 B1 后确认。
+extends: r6_text_h100.yaml
+grpo:
+  mode: audio
+  max_new_tokens: 128
+  trainable: [bridge, talker, audio_embedding, audio_heads]
+  reward:
+    weights: {asr_match: 1.0, completeness: 0.1}

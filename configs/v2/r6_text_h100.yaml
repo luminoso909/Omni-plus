@@ -1,0 +1,23 @@
+# G6 单卡模板；B1与数据路径需按runbook填写，CUDA尚待实测。
+extends: r6_text_local.yaml
+assets:
+  reference_root: weights/media-reference
+model:
+  kind: qwen3
+training:
+  device: cuda
+  dtype: bfloat16
+  steps: 10
+  accumulation_steps: 1
+  learning_rate: 0.00001
+  group_lrs: {lora: 0.00001}
+grpo:
+  group_size: 4
+  max_new_tokens: 64
+  policy:
+    source: sft
+    checkpoint: outputs/g6/b1/step-XXXXXX.pt
+    manifest: outputs/g6/b1/manifest.json
+    lineage: outputs/g6/b1/lineage.json
+  reward:
+    weights: {text_match: 1.0, completeness: 0.1}

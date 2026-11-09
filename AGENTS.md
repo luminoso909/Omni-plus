@@ -1,6 +1,6 @@
 ## 一、阶段与分工
 
-1. P0–P5 为只读历史。v2.1 按 `docs/PROJECT_PLAN.md` 与 `docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md` 推进，每次只执行用户授权的一个阶段。R5-L 最终修复与本地验收 PASS，证据见 `docs/reviews/R5-L_FINAL_FIX_REPORT.md`。R6-L 另行授权。G3、G4、G5/G6、G7 各自记录云端实测与正式验收。
+1. P0–P5 为只读历史。v2.1 按 `docs/PROJECT_PLAN.md` 与 `docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md` 推进，每次只执行用户授权的一个阶段。R5-L 最终修复与 R6-L 本地验收 PASS，证据分别见 `docs/reviews/R5-L_FINAL_FIX_REPORT.md` 和 `docs/reviews/R6-L_FINAL_REVIEW.md`。当前停在 G3 入口，云端各阶段另行授权并记录实测与正式验收。
 2. 每阶段由用户学习并实现核心算法。Codex 主要负责工程设施、测试、调试与文档辅助。
 3. 未经用户明确要求，不得直接实现或大规模改写模型核心代码，包括 Thinker、Talker、Bridge、Projector、SFT、GRPO、KV Cache 和流式推理。
 4. 不预生成空模型类；按实际需要逐步创建模块。
@@ -17,7 +17,7 @@
 ## 三、数据、实验与事实边界
 
 1. 大型模型或数据下载、正式训练、付费 API 与云任务均须用户明确授权。正式云端训练前以 G3 实测核定预算。规划中的示例命令须经实际入口和 smoke 验证后才能作为操作步骤。
-2. `docs/stages/P0.md`–`P5.md`、已交付的 R0–R5-local 报告、既有实验输出与 `../minimind-o` 保持只读。保护进入阶段前的 Git 工作区，禁止清理、覆盖或将无关改动混入阶段提交。新实验使用独立 run 路径。
+2. `docs/stages/P0.md`–`P5.md`、已交付的 R0–R6-local 报告、既有实验输出与 `../minimind-o` 保持只读。保护进入阶段前的 Git 工作区，禁止清理、覆盖或将无关改动混入阶段提交。新实验使用独立 run 路径。
 3. 不提交密钥、虚拟环境、模型权重、大型音频、下载数据及临时训练输出；保留配置、源码、测试、文档、小规模实验汇总数据。
 4. 测试报告区分静态检查、本地代码与极小样本验收、云端正式训练与实验、远程 CI，记录实际命令、设备、数据及权重版本。普通 pytest 使用本地 fixture，真实资产单列显式验收。阶段报告须核对 P0–P5 SHA-256。
 5. MiniMind-O 仅为学习参考，不直接复制其代码；如未来引入上游材料，先核实许可证并保留相应归属与修改说明。
