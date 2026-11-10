@@ -4,13 +4,12 @@ import argparse
 import json
 from pathlib import Path
 
-from omni.data.r3_prepare import load_prepared
 from omni.training.r3_local import (
     build_model,
-    check_task_semantics,
     configure_parameters,
     data_contract,
     evaluate_run,
+    inspect_sft_run,
     prepare,
     read_settings,
     smoke,
@@ -99,24 +98,31 @@ def main() -> None:
         raise FileNotFoundError(ROOT / args.resume)
     if args.run_dir is not None and (ROOT / args.run_dir).exists():
         raise FileExistsError(ROOT / args.run_dir)
-    if args.dry_run and args.command not in {"inspect", "prepare"}:
-        cache = ROOT / settings["data"]["cache_dir"]
-        load_prepared(cache, "train", contract)
-        if settings["schema_version"] == 2:
-            load_prepared(cache, "validation", contract)
-            check_task_semantics(settings, json.loads((cache / "manifest.json").read_text()))
-
     if args.dry_run or args.command == "inspect":
         model = build_model(settings, ROOT, meta=True)
+        preflight = None
+        if args.command not in {"inspect", "prepare"}:
+            preflight = inspect_sft_run(
+                model,
+                settings,
+                ROOT,
+                contract,
+                command=args.command,
+                resume=ROOT / args.resume if args.resume else None,
+                target=target,
+            )
         result = dict(
             status="validated",
             dry_run=args.dry_run,
-            execution="metadata_only_no_forward",
+            execution="preflight_no_forward"
+            if preflight is not None
+            else "metadata_only_no_forward",
             model_kind=settings["model"]["kind"],
             parameter_groups=configure_parameters(model, settings["training"]["recipe"]),
             model_config=model.config.to_dict(),
             assets=contract,
             training=settings["training"],
+            preflight=preflight,
             commands=[
                 "inspect",
                 "prepare",

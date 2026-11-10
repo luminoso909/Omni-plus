@@ -33,4 +33,4 @@ jobs:
           python -m pip check
           ruff format --check omni tests scripts
           ruff check omni tests scripts
-          pytest -q
+          python -m pytest -q

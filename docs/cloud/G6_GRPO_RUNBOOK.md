@@ -132,7 +132,7 @@ data:
   audited_manifest: outputs/g6/imported/data/audited.jsonl
   audited_manifest_sha256: 填写实际JSONL的SHA256
   cache_dir: .cache/g6/audited-v1
-  tasks: {t2a: 16}
+  tasks: {t2a: 20}
   seed: 42
   max_length: 1200
 training:
@@ -142,7 +142,7 @@ training:
   allow_diagnostic_a2a: false
 ```
 
-16 条仅为有限 Pilot 示例，每任务需有真实独立 train/validation/test。扩展 I2T/A2T/QA A2A 时同步修改预算和训练任务，仍先审核数据。资产路径、原始数据、processor 版本与缓存合同不一致时，使用新缓存路径重新准备。
+20 条仅为有限 Pilot 示例，当前选样配额为 16 train / 2 validation / 2 test，满足下面 `evaluation_prompts: 2`；样本须为独立媒体组。扩展 I2T/A2T/QA A2A 时同步修改预算和训练任务，仍先审核数据。资产路径、原始数据、processor 版本与缓存合同不一致时，使用新缓存路径重新准备。
 
 ```bash
 export HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1
@@ -160,7 +160,7 @@ data:
   audited_manifest: outputs/g6/imported/data/audited.jsonl
   audited_manifest_sha256: 填写与prepare相同的SHA256
   cache_dir: .cache/g6/audited-v1
-  tasks: {t2a: 16}
+  tasks: {t2a: 20}
   seed: 42
   max_length: 1200
 training:

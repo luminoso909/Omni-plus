@@ -1,0 +1,19 @@
+# 云训练前候选：schema 2、有界原始 T2A、独立缓存与逐步保存。
+# 先在派生 YAML 中填入实际审计清单 SHA；不下载、不隐式接受占位值。
+extends: r4a_h100.yaml
+assets:
+  qwen_dir: weights/qwen3-1.7b
+  reference_root: weights/media-reference
+data:
+  audited_manifest: outputs/g3/data/audited.jsonl
+  audited_manifest_sha256: REQUIRED_AUDITED_MANIFEST_SHA256
+  cache_dir: .cache/g3-release/t2a-v1
+  tasks: {t2a: 8}
+  seed: 42
+  max_length: 1200
+training:
+  steps: 10
+  save_interval: 1
+  eval_interval: 2
+  patience: 0
+  allow_diagnostic_a2a: false

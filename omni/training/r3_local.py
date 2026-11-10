@@ -7,6 +7,7 @@ import platform
 import random
 import subprocess
 import time
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -364,7 +365,17 @@ def build_model(settings: dict, root: Path, *, meta: bool = False) -> OmniPlusOm
     return model
 
 
-def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
+def inspection_checkpoint(path: Path) -> dict:
+    """预检优先 mmap；旧格式仅允许有限 CPU 回退，不改写来源文件。"""
+    mapped = zipfile.is_zipfile(path)
+    if not mapped and path.stat().st_size > 64 * 1024 * 1024:
+        raise ValueError("旧格式 Checkpoint 超过 64 MiB；请另存为新版 torch.save 格式后预检。")
+    return torch.load(path, map_location="cpu", weights_only=True, mmap=mapped)
+
+
+def initialize_components(
+    model: nn.Module, settings: dict, root: Path, *, validate_only: bool = False
+) -> None:
     """先导入完整多模态组件，再按显式文件覆盖 Talker/两个独立 Projector。"""
     initial = settings["model"].get("initialization", {})
     for key, prefix in (
@@ -375,7 +386,11 @@ def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
     ):
         if not initial.get(key):
             continue
-        payload = torch.load(root / initial[key], map_location="cpu", weights_only=True)
+        payload = (
+            inspection_checkpoint(root / initial[key])
+            if validate_only
+            else torch.load(root / initial[key], map_location="cpu", weights_only=True)
+        )
         state = payload.get("model", payload)
         if prefix:
             module = model.get_submodule(prefix)
@@ -410,6 +425,8 @@ def initialize_components(model: nn.Module, settings: dict, root: Path) -> None:
         ):
             raise ValueError(f"初始化 Checkpoint 的键、shape、dtype 或数值不兼容：{key}")
 
+        if validate_only:
+            continue
         with torch.no_grad():
             for name, value in expected.items():
                 value.copy_(values[name])
@@ -461,7 +478,13 @@ def read_bridge_base(settings: dict, root: Path, contract: dict, source_sha: dic
 
 
 def initialize_bridge_base(
-    model: OmniPlusOmni, settings: dict, root: Path, contract: dict, source_sha: dict
+    model: OmniPlusOmni,
+    settings: dict,
+    root: Path,
+    contract: dict,
+    source_sha: dict,
+    *,
+    validate_only: bool = False,
 ) -> None:
     """从同一个 Fixed 训练结果导入共享权重，融合参数保留本候选初始化。"""
     payload = read_bridge_base(settings, root, contract, source_sha)
@@ -501,7 +524,8 @@ def initialize_bridge_base(
     ):
         raise ValueError("Bridge 热启动的共享权重键、shape、dtype 或数值不兼容。")
 
-    model.load_state_dict(expected | values, strict=True)
+    if not validate_only:
+        model.load_state_dict(expected | values, strict=True)
 
 
 def parameter_group(name: str) -> str:
@@ -700,6 +724,138 @@ def check_task_semantics(settings: dict, manifest: dict) -> None:
     qa = [row for row in rows if row["task"] == "a2a"]
     if not qa or any(row.get("a2a_kind") != "qa" for row in qa):
         raise ValueError("问答式 A2A 必须提供逐条已审计 QA 目标，不能复用 echo。")
+
+
+def inspect_sft_run(
+    model: nn.Module,
+    settings: dict,
+    root: Path,
+    contract: dict,
+    *,
+    command: str,
+    resume: Path | None,
+    target: int,
+) -> dict:
+    """以 meta 模型核对实际数据/初始化/恢复门槛，不前向、不恢复 RNG 或写产物。"""
+    from omni.data.r3_prepare import load_prepared
+    from omni.evaluation.bridge_benchmark import benchmark_options
+
+    evaluation = command in {"evaluate", "demo"}
+    options = benchmark_options(settings.get("evaluation", {}))
+    split = (options["split"] if options else "validation") if evaluation else "train"
+    directory = root / settings["data"]["cache_dir"]
+    samples = load_prepared(directory, split, contract)
+    required = [split] + (
+        ["validation"] if not evaluation and settings["schema_version"] == 2 else []
+    )
+    for name in required:
+        rows = samples if name == split else load_prepared(directory, name, contract)
+        if set(settings["training"]["tasks"]) - {row["task"] for row in rows}:
+            raise ValueError(f"{name} 缓存缺少配置要求的任务。")
+    check_task_semantics(settings, json.loads((directory / "manifest.json").read_text()))
+    if command == "demo":
+        count = options["t2a_samples"] if options else 1
+        if sum(row["task"] == "t2a" for row in samples) < count:
+            raise ValueError("音频 demo 的实际评测 split 缺少足够 T2A 样本。")
+
+    # 复用热启动的资产、谱系、键、形状及数值检查；meta 参数不写入权重。
+    identity = run_identity(settings, root)
+    initialize_components(model, settings, root, validate_only=True)
+    if resume is None:
+        initialize_bridge_base(
+            model, settings, root, contract, identity["initialization_sha256"], validate_only=True
+        )
+        return dict(split=split, samples=len(samples), checkpoint_step=None)
+
+    payload = inspection_checkpoint(resume)
+    if not isinstance(payload, dict) or not {"model", "config", "progress"} <= payload.keys():
+        raise ValueError("需要包含 model、config 和 progress 的完整 Checkpoint。")
+    progress = payload["progress"]
+    if not isinstance(progress, dict) or progress.get("identity") != identity:
+        raise ValueError("预检配置、代码或数据与 Checkpoint 不一致。")
+    if payload["config"] != model.config.to_dict():
+        raise ValueError("预检模型配置与 Checkpoint 不一致。")
+    state, expected = payload["model"], model.state_dict()
+    if (
+        not isinstance(state, dict)
+        or state.keys() != expected.keys()
+        or any(
+            not isinstance(value, torch.Tensor)
+            or value.shape != expected[name].shape
+            or value.dtype != expected[name].dtype
+            or (value.is_floating_point() and not value.isfinite().all())
+            for name, value in state.items()
+        )
+    ):
+        raise ValueError("Checkpoint 参数键、shape、dtype 或数值不兼容。")
+    step = progress.get("step")
+    if type(step) is not int or step < 0 or (not evaluation and step >= target):
+        raise ValueError("Checkpoint step 无效，恢复目标必须大于已保存 step。")
+    if not evaluation:
+        trainable = [name for name, param in model.named_parameters() if param.requires_grad]
+        if not {"optimizer", "scaler", "rng"} <= payload.keys() or "scheduler" not in progress:
+            raise ValueError("完整恢复需要 Optimizer、Scaler、RNG 和 Scheduler 状态。")
+        if payload.get("trainable") != trainable:
+            raise ValueError("恢复时冻结策略变化，不能沿用旧优化器状态。")
+        check_resume_state(payload, model, settings)
+    return dict(split=split, samples=len(samples), checkpoint_step=step)
+
+
+def check_resume_state(payload: dict, model: nn.Module, settings: dict) -> None:
+    """检查恢复状态结构；只使用 meta 优化器及私有 CPU RNG，不改变全局随机状态。"""
+    optimizer, scheduler, _, _ = optimizer_state(model, settings)
+    saved = payload["optimizer"]
+    groups = optimizer.state_dict()["param_groups"]
+    if (
+        not isinstance(saved, dict)
+        or not isinstance(saved.get("state"), dict)
+        or not isinstance(saved.get("param_groups"), list)
+        or len(saved["param_groups"]) != len(groups)
+        or any(
+            not isinstance(old, dict)
+            or not old.keys() >= new.keys()
+            or not isinstance(old["params"], list)
+            or len(old["params"]) != len(new["params"])
+            for old, new in zip(saved["param_groups"], groups, strict=True)
+        )
+    ):
+        raise ValueError("Optimizer state/param_groups 结构或参数分组不兼容。")
+
+    state = payload["progress"]["scheduler"]
+    if (
+        not isinstance(state, dict)
+        or not state.keys() >= scheduler.state_dict().keys()
+        or type(state["last_epoch"]) is not int
+        or any(
+            not isinstance(state[key], list) or len(state[key]) != len(groups)
+            for key in ("base_lrs", "_last_lr", "lr_lambdas")
+        )
+        or not isinstance(payload["scaler"], dict)
+    ):
+        raise ValueError("Scheduler/Scaler 状态结构不兼容。")
+
+    # CPU 随机状态由私有实例验证；设备 RNG 只核对基本张量结构，设备恢复留给实测。
+    rng = payload["rng"]
+    try:
+        random.Random().setstate(rng["python"])
+        numpy = rng["numpy"]
+        np.random.RandomState().set_state(
+            (numpy[0], np.array(numpy[1], dtype=np.uint32), *numpy[2:])
+        )
+        torch.Generator(device="cpu").set_state(rng["torch"])
+        device_states = ([rng["mps"]] if rng["mps"] is not None else []) + (
+            rng["cuda"] if rng["cuda"] is not None else []
+        )
+        if any(
+            not isinstance(value, torch.Tensor)
+            or value.dtype != torch.uint8
+            or value.ndim != 1
+            or not value.numel()
+            for value in device_states
+        ):
+            raise ValueError("设备 RNG 必须为非空 ByteTensor。")
+    except (KeyError, IndexError, TypeError, ValueError, RuntimeError, OverflowError) as error:
+        raise ValueError("RNG 状态结构不兼容。") from error
 
 
 def loss_curve(path: Path, rows: list[dict], evaluations: list[dict]) -> None:

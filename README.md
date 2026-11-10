@@ -14,7 +14,9 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 
 本地按 `R2 → R3-L → R4-L → R5-L → R6-L` 逐项验收接口、数学正确性与极小样本闭环。之后按 `G3 → G4 → G5/G6 → G7` 记录云端资源、训练和实验结果。正式 B1 成立后再决定 Bridge 消融、GRPO Reward 与单卡或多卡方案。 [本地与云端手册](docs/OMNIPLUS_LOCAL_FIRST_CLOUD_PLAYBOOK.md) · [架构与数据决策](docs/OMNIPLUS_DECISIONS_AND_DATA.md) · [双轨待办](docs/项目待办.md)
 
-2026-11-09 开发完成度审计：主体算法与本地训练工程已验收，正式数据供应、独立只读评测、全任务 Benchmark、统一性能计时和最终 Demo/发布仍有缺口。本轮 51 项定向测试、Ruff/格式/依赖检查通过；未重跑全仓或启动云端。代码可进入 **G3 部署与有限资源验收准备**，但需先补齐云端资产/数据/配置，不能直接正式训练。B1 首次 Benchmark 在 G4D 结束时执行，G7 进行最终复核。 [详细审计与 A–D 缺口清单](docs/reports/OMNIPLUS_DEVELOPMENT_AUDIT.md) · [G7 最终执行手册](docs/cloud/G7_FINAL_RUNBOOK.md)
+2026-11-10 云训练前工程验收：**READY FOR G3**，可进入部署和有限资源验收。R5 两个 P1 保持关闭，R6 本地 PASS；补齐 SFT dry-run 的实际数据、初始化及恢复预检，统一 CI 使用 `python -m pytest`。新入口配置为 `configs/v2/g3_release.yaml`：8 条独立 T2A、最多 10 步、逐步保存。全仓 **441 passed、1 skipped**，排除既有未提交改动的干净交付树 **434 passed、1 skipped**；Ruff/格式/依赖通过。候选 CUDA 环境、Git bundle 交付和首轮命令见 [最终工程审计](docs/reports/PRE_CLOUD_RELEASE_AUDIT.md)。
+
+真实媒体资产及本轮 G3 数据包尚需准备，云端未执行，不能直接开始正式训练。独立只读评测、正式数据供应、全任务 Benchmark、性能计时和 Demo/发布缺口继续保留；B1 首次 Benchmark 在 G4D 结束时执行，G7 最终复核。 [前轮 A–D 缺口清单](docs/reports/OMNIPLUS_DEVELOPMENT_AUDIT.md) · [G7 最终执行手册](docs/cloud/G7_FINAL_RUNBOOK.md)
 
 G3–G7 手册现已覆盖，未实现入口在 G7 手册中明确标注。G3 文档在当前用户工作区有尚未提交的路径迁移，历史 P5 部分脚本/报告也尚未跟踪；云端应使用选定的干净提交，完整公开交付前另行处理这些已有改动。本轮未将它们混入文档提交。
 
@@ -132,7 +134,7 @@ R6-L 复用现有模型、采样游标、Optimizer 和 Checkpoint，增加 `grpo
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m pytest -q tests/test_r6_*.py
 ```
 
-全仓本地回归 **399 passed, 1 skipped**（沙箱无 MPS）；排除用户既有改动的干净归档 **392 passed, 1 skipped**。实际 CLI 三模式各完成两步，Joint 连续更新与新进程恢复逐项一致；原配置的外置媒体盘未挂载，本轮未重新验收真实编码器/Mimi/ASR。已有许可 T2A 缓存另完成 Tiny 更新，不能据此宣称正式 RL 或音质提升。云端命令、严格数据谱系与 B1 对照见 [G6 操作说明](docs/cloud/G6_GRPO_RUNBOOK.md)。
+R6 阶段当时的全仓本地回归 **399 passed, 1 skipped**（沙箱无 MPS）；排除用户既有改动的干净归档 **392 passed, 1 skipped**。实际 CLI 三模式各完成两步，Joint 连续更新与新进程恢复逐项一致；原配置的外置媒体盘未挂载，本轮未重新验收真实编码器/Mimi/ASR。已有许可 T2A 缓存另完成 Tiny 更新，不能据此宣称正式 RL 或音质提升。云端命令、严格数据谱系与 B1 对照见 [G6 操作说明](docs/cloud/G6_GRPO_RUNBOOK.md)。
 
 ### 5 流式推理
 

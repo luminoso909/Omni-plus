@@ -1,6 +1,6 @@
 ## 一、用途与前置条件
 
-本手册基于 `6c497ca` 的真实 CLI，经本轮开发完成度审计补充。**G7 未执行；以下云端命令均待授权和实测。** 本地 R2–R6-L PASS 证明接口、数学及 Tiny 闭环，不证明 B1 或研究收益。 [开发审计与缺口编号](../reports/OMNIPLUS_DEVELOPMENT_AUDIT.md)
+本手册基于 R6 已交付 CLI，更新至 2026-11-10 的预检修复。**G7 未执行；以下云端命令均待授权和实测。** 本地 R2–R6-L PASS 证明接口、数学及 Tiny 闭环，不证明 B1 或研究收益。 [开发审计与缺口编号](../reports/OMNIPLUS_DEVELOPMENT_AUDIT.md) · [最新工程验收与 G3 启动步骤](../reports/PRE_CLOUD_RELEASE_AUDIT.md)
 
 **B1 首次 Benchmark 必须在 G4D 结束时执行。G7 是固定协议下的最终统一复核，不是第一次评测。** 当前统一 Benchmark 仍有待实现入口，下文明确分列；不要把旧规划中的 `eval_b1.yaml` 或 `--checkpoint` 当成现有命令。
 
@@ -52,7 +52,7 @@ nvidia-smi > "$G7_ROOT/environment/nvidia-smi.txt"
 
 目录名每次更换；不覆盖旧结果。CUDA 依赖按 G3 锁定的相容环境安装，不能照搬 Mac wheel。实际导入来源检查要求环境安装到当前 checkout；不借用另一目录的 editable install。
 
-`outputs/` 应位于有足够空间的持久盘，Checkpoint 备份另置。运行全过程冻结源码。正式完整回归可在此时执行，但本次审计只运行报告所列的轻量子集：
+`outputs/` 应位于有足够空间的持久盘，Checkpoint 备份另置。运行全过程冻结源码。2026-11-10 的完整本地回归见最新工程审计；新云环境仍需执行以下检查：
 
 ```bash
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m pytest -q > "$G7_ROOT/logs/pytest.log" 2>&1
@@ -64,7 +64,7 @@ git diff --check
 
 ### 1 G3–G6 文档导航与旧命令纠正
 
-G3 的 Git 跟踪路径为 `docs/G3_CLOUD_RUNBOOK.md`，本机用户工作区已将其移至 `docs/cloud/G3_CLOUD_RUNBOOK.md`，尚未提交。本轮没有接管这个迁移。其早期“train/resume/evaluate/profile 尚未实现”的描述已过时；`g3_h100.yaml` schema 1 仍最多 10 步。新 schema 2 的资源准备和实际命令以 [G4](G4_SFT_RUNBOOK.md) 为准；100 步需事先将配置预算设为 100 并授权。
+G3 的 Git 跟踪路径为 `docs/G3_CLOUD_RUNBOOK.md`，本机用户工作区已将其移至 `docs/cloud/G3_CLOUD_RUNBOOK.md`，尚未提交。本轮没有接管这个迁移。其早期“train/resume/evaluate/profile 尚未实现”的描述已过时；`g3_h100.yaml` schema 1 仍最多 10 步。当前使用 `g3_release.yaml` schema 2 和 [工程验收第六章](../reports/PRE_CLOUD_RELEASE_AUDIT.md) 的有限启动步骤；后续配方见 [G4](G4_SFT_RUNBOOK.md)。100 步需事先建立新配置并授权。
 
 [G5](G5_BRIDGE_RUNBOOK.md) 提供矩阵/谱系/Bridge 比较，[G6](G6_GRPO_RUNBOOK.md) 提供三种 RL 模式和基线比较。所有入口使用 `--run-dir` 和 `--resume`，没有 `--run-id`、`--checkpoint`、`--device` 或 `export` 子命令。`profile/grpo-profile` 都进行参数更新，**不在 G7 当作只读推理测速命令调用**。
 
@@ -125,7 +125,7 @@ evaluation:
 
 ### 2 SFT / Bridge：已有诊断和 T2A Benchmark
 
-`B1_CFG/B1_CKPT` 必须指向该 Checkpoint 的原始、可核验配置和完整状态；当前源码身份也须相同。先用 dry-run 检查路径/预算，但当前 SFT dry-run 不完整检查 Checkpoint 内容或实际 test split，真正 evaluate/demo 成功才是对应诊断证据。
+`B1_CFG/B1_CKPT` 必须指向该 Checkpoint 的原始、可核验配置和完整状态；当前源码身份也须相同。SFT dry-run 现检查实际 split/任务、初始化及 Checkpoint 身份/配置/参数；它不执行 forward、不证明 CUDA 可用，真正 evaluate/demo 成功才是对应诊断证据。不能用这次预检修复替代仍待实现的 A1 独立只读评测。
 
 ```bash
 : "${B1_CFG:?填写B1原始配置路径}"
