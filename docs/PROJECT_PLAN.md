@@ -613,7 +613,7 @@ R1 的 Qwen Backend 数值/Cache 已验收；P2/P3/P5 旧逻辑保持可运行�
 - [x] 四任务各 8 条真实诊断样本，媒体分组与 24/4/4 划分、原始语音 16k/24k 重编码和严格版本缓存通过。
 - [x] `inspect/prepare/smoke/--dry-run` 已实现；参数分组、原 P4 Loss/训练步骤与完整恢复复用通过。
 - [x] 真实 tiny Batch 更新、冻结参数不变；新进程 2+2 步与连续 4 步完整状态一致。
-- [x] 全仓库 183 项测试、Ruff/格式/依赖检查通过；[R3-L 报告](stages/R3-local.md) 和 [G3 操作说明](G3_CLOUD_RUNBOOK.md) 已归档。
+- [x] 全仓库 183 项测试、Ruff/格式/依赖检查通过；[R3-L 报告](stages/R3-local.md) 和 [G3 操作说明](cloud/G3_CLOUD_RUNBOOK.md) 已归档。
 
 原始预编码回答因缺乏精确 Mimi 来源而隔离；A2A 当前为语音复述诊断。正式问答数据、1.7B CUDA Profile 和 B1 尚未验收。
 

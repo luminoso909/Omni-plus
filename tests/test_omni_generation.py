@@ -154,6 +154,24 @@ def test_thinking_end_delays_audio_start(omni_config: OmniPlusConfig, monkeypatc
     assert calls[4]["audio_ids"][0, :, -1].tolist() == [6, 17]
 
 
+def test_eos_before_thinking_end_stops_without_audio(
+    omni_config: OmniPlusConfig, monkeypatch
+) -> None:
+    omni_config.think_end_ids = [9, 10]
+    model, calls = script_model(omni_config, monkeypatch, [9, 2], [(3, 7)])
+    text, codes = model.generate(
+        torch.tensor([[1, 11]]),
+        max_new_tokens=8,
+        temperature=0,
+        audio_temperature=0,
+        open_thinking=True,
+    )
+
+    assert text.tolist() == [[1, 11, 9, 2]]
+    assert codes.shape == (1, omni_config.num_audio_codebooks, 0)
+    assert len(calls) == 2
+
+
 def test_reference_codes_and_speaker_prompt(omni_config: OmniPlusConfig, monkeypatch) -> None:
     model, calls = script_model(
         omni_config,
@@ -161,14 +179,15 @@ def test_reference_codes_and_speaker_prompt(omni_config: OmniPlusConfig, monkeyp
         text_steps=[4],
         audio_steps=[(3, 7)],
     )
-    prompt = torch.tensor([[1, 11, 12, 13]])
-    ref_codes = torch.tensor([[[1, 2], [3, 4]]])
+    prompt = torch.tensor([[0, 1, 12, 13]])
+    ref_codes = torch.tensor([[[5, 1, 2], [6, 3, 4]]])
     list(
         model.stream_generate(
             prompt,
             max_new_tokens=1,
             temperature=0,
             audio_temperature=0,
+            attention_mask=torch.tensor([[0, 1, 1, 1]]),
             ref_codes=ref_codes,
             spk_emb=torch.zeros(1, 6),
             use_cache=False,
@@ -186,6 +205,30 @@ def test_generate_cache_equivalence(omni_config: OmniPlusConfig) -> None:
     full_text, full_codes = model.generate(prompt, use_cache=False, **args)
     assert torch.equal(cached_text, full_text)
     assert torch.equal(cached_codes, full_codes)
+
+
+def test_left_padding_matches_unpadded_generation(omni_config: OmniPlusConfig) -> None:
+    torch.manual_seed(19)
+    model = OmniPlusOmni(omni_config).eval()
+    prompt = torch.tensor([[1, 11, 12]])
+    padded = torch.tensor([[15, 1, 11, 12]])
+    mask = torch.tensor([[0, 1, 1, 1]])
+    args = dict(max_new_tokens=6, temperature=0, audio_temperature=0, repetition_penalty=1.5)
+
+    text, codes = model.generate(prompt, **args)
+    padded_text, padded_codes = model.generate(padded, attention_mask=mask, **args)
+
+    assert torch.equal(padded_text[:, 1:], text)
+    assert torch.equal(padded_codes, codes)
+
+
+@pytest.mark.parametrize("mask", [[[1, 1, 0]], [[1, 0, 1]], [[0, 0, 0]]])
+def test_stream_rejects_padding_outside_prompt_prefix(
+    omni_config: OmniPlusConfig, mask: list[list[int]]
+) -> None:
+    model = OmniPlusOmni(omni_config).eval()
+    with pytest.raises(ValueError, match="左 padding"):
+        list(model.stream_generate(torch.tensor([[1, 11, 12]]), attention_mask=torch.tensor(mask)))
 
 
 def test_generation_empty_budget_and_batch_limit(omni_config: OmniPlusConfig) -> None:

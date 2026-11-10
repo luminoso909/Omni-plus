@@ -64,7 +64,7 @@ git diff --check
 
 ### 1 G3–G6 文档导航与旧命令纠正
 
-G3 的 Git 跟踪路径为 `docs/G3_CLOUD_RUNBOOK.md`，本机用户工作区已将其移至 `docs/cloud/G3_CLOUD_RUNBOOK.md`，尚未提交。本轮没有接管这个迁移。其早期“train/resume/evaluate/profile 尚未实现”的描述已过时；`g3_h100.yaml` schema 1 仍最多 10 步。当前使用 `g3_release.yaml` schema 2 和 [工程验收第六章](../reports/PRE_CLOUD_RELEASE_AUDIT.md) 的有限启动步骤；后续配方见 [G4](G4_SFT_RUNBOOK.md)。100 步需事先建立新配置并授权。
+[早期 G3 手册](G3_CLOUD_RUNBOOK.md) 记录 R3-L 时期的入口与 `g3_h100.yaml` schema 1 的 10 步预算。当前使用 `g3_release.yaml` schema 2 和 [工程验收第六章](../reports/PRE_CLOUD_RELEASE_AUDIT.md) 的有限启动步骤。后续配方见 [G4](G4_SFT_RUNBOOK.md)。100 步需事先建立新配置并授权。
 
 [G5](G5_BRIDGE_RUNBOOK.md) 提供矩阵/谱系/Bridge 比较，[G6](G6_GRPO_RUNBOOK.md) 提供三种 RL 模式和基线比较。所有入口使用 `--run-dir` 和 `--resume`，没有 `--run-id`、`--checkpoint`、`--device` 或 `export` 子命令。`profile/grpo-profile` 都进行参数更新，**不在 G7 当作只读推理测速命令调用**。
 

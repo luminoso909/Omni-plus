@@ -6,6 +6,7 @@ generate 显式实现自回归循环，支持采样、KV Cache 和 Streamer。
 """
 
 import math
+from dataclasses import dataclass
 
 import torch
 from einops import rearrange
@@ -25,6 +26,17 @@ type KeyValue = tuple[
 ]
 type PastKeyValues = tuple[KeyValue, ...]
 type AttentionMask = Bool[Tensor, "batch total_seq"] | Int[Tensor, "batch total_seq"]
+type HiddenState = Float[Tensor, "batch seq hidden"]
+
+
+@dataclass
+class ThinkerOutput:
+    last_hidden_state: HiddenState
+    past_key_values: PastKeyValues | None
+    aux_loss: Float[Tensor, ""]
+    hidden_states: tuple[HiddenState, ...] | None
+    bridge_hidden_state: HiddenState | None
+    position_ids: Int[Tensor, "batch seq"]
 
 
 class RMSNorm(nn.Module):
@@ -321,14 +333,40 @@ class OmniPlusModel(nn.Module):
         inputs_embeds: Float[Tensor, "batch seq hidden"] | None = None,
         use_cache: bool = False,
         output_hidden_states: bool = False,
-    ) -> tuple[Float[Tensor, "batch seq hidden"], PastKeyValues | None, Tensor, tuple | None]:
-        # 输入与 Cache 的必要边界检查
+    ) -> tuple[HiddenState, PastKeyValues | None, Tensor, tuple[HiddenState, ...] | None]:
         if (input_ids is None) == (inputs_embeds is None):
             raise ValueError("input_ids 和 inputs_embeds 必须且只能提供一种。")
+
+        # 文本调用保留原返回值，嵌入后的计算与 Omni 共用
+        x = self.embed_tokens(input_ids) if inputs_embeds is None else inputs_embeds
+        result = self.forward_embeddings(
+            x, attention_mask, position_ids, past_key_values, use_cache, output_hidden_states
+        )
+        return (
+            result.last_hidden_state,
+            result.past_key_values,
+            result.aux_loss,
+            result.hidden_states,
+        )
+
+    def forward_embeddings(
+        self,
+        inputs_embeds: HiddenState,
+        attention_mask: AttentionMask | None = None,
+        position_ids: Int[Tensor, "batch seq"] | None = None,
+        past_key_values: PastKeyValues | None = None,
+        use_cache: bool = False,
+        output_hidden_states: bool = False,
+        *,
+        bridge_layer: int | None = None,
+    ) -> ThinkerOutput:
+        """推进 Thinker；可单独读取指定层在最终归一化前的输出。"""
         if past_key_values is not None and len(past_key_values) != len(self.layers):
             raise ValueError("KV Cache 层数不匹配。")
+        if bridge_layer is not None and not 0 <= bridge_layer < len(self.layers):
+            raise ValueError("bridge_layer 必须指向有效的 Thinker Block。")
 
-        batch, seq = (input_ids if inputs_embeds is None else inputs_embeds).shape[:2]
+        batch, seq = inputs_embeds.shape[:2]
         past_len = past_key_values[0][0].shape[-2] if past_key_values else 0
 
         if past_len + seq > self.config.max_position_embeddings:
@@ -336,20 +374,21 @@ class OmniPlusModel(nn.Module):
         if attention_mask is not None and attention_mask.shape != (batch, past_len + seq):
             raise ValueError("attention_mask 必须覆盖 [batch, past_len + seq]。")
 
-        # 获取输入嵌入并确定当前 token 位置
-        x = self.embed_tokens(input_ids) if inputs_embeds is None else inputs_embeds
+        # 计算当前位置；padding 位置不占用 RoPE 的逻辑步数
+        device = inputs_embeds.device
         if attention_mask is not None:
-            attention_mask = attention_mask.to(x.device)
+            attention_mask = attention_mask.to(device)
         if position_ids is None:
             if attention_mask is None:
-                position_ids = torch.arange(past_len, past_len + seq, device=x.device)[None, :]
+                position_ids = torch.arange(past_len, past_len + seq, device=device)[None, :]
             else:
                 position_ids = (attention_mask.long().cumsum(-1) - 1).clamp_min(0)[:, -seq:]
-        position_ids = position_ids.to(x.device)
+        position_ids = position_ids.to(device)
 
         # 逐层更新 hidden、Cache 与路由损失
-        x = self.dropout(x)
+        x = self.dropout(inputs_embeds)
         history = () if output_hidden_states else None
+        bridge = None
         presents = []
         aux_loss = x.new_zeros(())
         for layer_id, layer in enumerate(self.layers):
@@ -358,6 +397,8 @@ class OmniPlusModel(nn.Module):
             past = None if past_key_values is None else past_key_values[layer_id]
             x, present, layer_aux = layer(x, position_ids, attention_mask, past, use_cache)
             aux_loss = aux_loss + layer_aux
+            if layer_id == bridge_layer:
+                bridge = x
             if use_cache:
                 presents.append(present)
 
@@ -365,7 +406,9 @@ class OmniPlusModel(nn.Module):
         x = self.norm(x)
         if output_hidden_states:
             history += (x,)
-        return x, tuple(presents) if use_cache else None, aux_loss, history
+        return ThinkerOutput(
+            x, tuple(presents) if use_cache else None, aux_loss, history, bridge, position_ids
+        )
 
 
 class OmniPlusForCausalLM(PreTrainedModel, GenerationMixin):

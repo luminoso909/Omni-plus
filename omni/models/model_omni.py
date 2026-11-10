@@ -84,21 +84,19 @@ class OmniPlusOmni(OmniPlusForCausalLM):
     ) -> OmniOutput:
         config = self.config
         batch, seq = input_ids.shape
-        n_thinker = len(self.model.layers)
+        n_thinker = config.num_hidden_layers
         n_layers = n_thinker + len(self.talker.layers)
 
         if past_key_values is not None and len(past_key_values) != n_layers:
             raise ValueError("Cache 必须包含全部 Thinker 与 Talker 层。")
-        past_len = past_key_values[0][0].shape[-2] if past_key_values else 0
-        if past_len + seq > config.max_position_embeddings or logits_to_keep < 0:
-            raise ValueError("检查上下文长度和 logits_to_keep。")
-        if attention_mask is not None and attention_mask.shape != (batch, past_len + seq):
-            raise ValueError("attention_mask 必须覆盖历史 Cache 和当前输入。")
+        if logits_to_keep < 0:
+            raise ValueError("logits_to_keep 必须 >= 0。")
         if audio_ids is not None and audio_ids.shape != (batch, config.num_audio_codebooks, seq):
             raise ValueError("audio_ids 必须是 [batch, num_audio_codebooks, seq]。")
 
         # 文本输入嵌入；只在 prefill 注入音频与视觉特征
         hidden = self.model.embed_tokens(input_ids)
+        past_len = past_key_values[0][0].shape[-2] if past_key_values else 0
         if past_len == 0:
             hidden = self._inject_features(
                 input_ids, hidden, audio_features, config.audio_ids, self.audio_proj
@@ -106,25 +104,19 @@ class OmniPlusOmni(OmniPlusForCausalLM):
             hidden = self._inject_features(
                 input_ids, hidden, image_features, config.image_ids, self.vision_proj
             )
-        hidden = self.model.dropout(hidden)
-        if attention_mask is None:
-            positions = torch.arange(past_len, past_len + seq, device=hidden.device)[None, :]
-        else:
+        if attention_mask is not None:
             attention_mask = attention_mask.to(hidden.device)
-            positions = (attention_mask.long().cumsum(-1) - 1).clamp_min(0)[:, -seq:]
 
-        # Thinker 输出文本；Bridge 读取指定 Block 后、最终 norm 前的特征
-        presents = []
-        aux_loss = hidden.new_zeros(())
-        for i, layer in enumerate(self.model.layers):
-            past = None if past_key_values is None else past_key_values[i]
-            hidden, present, layer_aux = layer(hidden, positions, attention_mask, past, use_cache)
-            aux_loss = aux_loss + layer_aux
-            if i == config.bridge_layer:
-                bridge = hidden
-            if use_cache:
-                presents.append(present)
-        text_logits = self.lm_head(self.model.norm(hidden)[:, -logits_to_keep:])
+        # Thinker 共享前向，按需返回供 Bridge 使用的单层特征
+        thinker_past = None if past_key_values is None else past_key_values[:n_thinker]
+        thinker = self.model.forward_embeddings(
+            hidden,
+            attention_mask=attention_mask,
+            past_key_values=thinker_past,
+            use_cache=use_cache,
+            bridge_layer=config.bridge_layer,
+        )
+        text_logits = self.lm_head(thinker.last_hidden_state[:, -logits_to_keep:])
 
         # Talker 使用同位置的 Bridge 条件和历史音频码本
         if audio_ids is None:
@@ -133,16 +125,20 @@ class OmniPlusOmni(OmniPlusForCausalLM):
             )
         talker_past = None if past_key_values is None else past_key_values[n_thinker:]
         audio_logits, talker_cache, talker_aux = self.talker(
-            bridge, audio_ids, positions, attention_mask, talker_past, use_cache, spk_emb
+            thinker.bridge_hidden_state,
+            audio_ids,
+            thinker.position_ids,
+            attention_mask,
+            talker_past,
+            use_cache,
+            spk_emb,
         )
-        if use_cache:
-            presents.extend(talker_cache)
 
         return OmniOutput(
             logits=text_logits,
             audio_logits=audio_logits[:, :, -logits_to_keep:],
-            aux_loss=aux_loss + talker_aux,
-            past_key_values=tuple(presents) if use_cache else None,
+            aux_loss=thinker.aux_loss + talker_aux,
+            past_key_values=thinker.past_key_values + talker_cache if use_cache else None,
         )
 
     def _sample_token(
@@ -227,12 +223,13 @@ class OmniPlusOmni(OmniPlusForCausalLM):
     ) -> Iterator[tuple[Int[Tensor, "batch 1"] | None, AudioCodes | None]]:
         """单样本流式生成：每步返回新文本 token 和可选的一帧音频 codes。
 
+        Prompt 支持左 padding，attention_mask 中至少有一个有效 token。
         第 i 路码本延迟 i 步，首路在文本生成第 1 步后启动；最多运行 max_new_tokens 步。
         这里输出离散 codes，波形解码与实时播放由外部 Codec 负责。
         """
         config = self.config
-        if input_ids.shape[0] != 1:
-            raise ValueError("流式生成目前只支持 batch=1；forward 支持批量输入。")
+        if input_ids.ndim != 2 or input_ids.shape[0] != 1 or input_ids.shape[1] == 0:
+            raise ValueError("流式生成需要 batch=1 且非空的 prompt。")
         if (
             max_new_tokens < 0
             or temperature < 0
@@ -245,21 +242,28 @@ class OmniPlusOmni(OmniPlusForCausalLM):
         if open_thinking and not config.think_end_ids:
             raise ValueError("open_thinking=True 需要非空 think_end_ids。")
 
+        # 只接受左 padding，使文本采样和音频条件都对齐到有效 prompt 末尾
+        mask = torch.ones_like(input_ids) if attention_mask is None else attention_mask
+        start = 0
+        if attention_mask is not None:
+            if mask.shape != input_ids.shape:
+                raise ValueError("attention_mask 必须与 prompt 形状一致。")
+            mask = mask.to(input_ids.device)
+            valid = mask.bool()
+            if not valid[0, -1] or (valid[:, :-1] & ~valid[:, 1:]).any():
+                raise ValueError("流式生成只支持左 padding，且 prompt 至少有一个有效 token。")
+            start = input_ids.shape[1] - int(valid.sum().item())
+
         # 初始化历史码本，可在 prompt 末尾放参考音频和说话人标记
         count = config.num_audio_codebooks
         audio = input_ids.new_full((1, count, input_ids.shape[1]), config.audio_pad_token)
         reserve = int(spk_emb is not None)
-        ref_len = 0 if ref_codes is None else min(ref_codes.shape[-1], input_ids.shape[1] - reserve)
+        slots = input_ids.shape[1] - start - reserve
+        ref_len = 0 if ref_codes is None else min(ref_codes.shape[-1], slots)
         if ref_codes is not None and ref_len > 0:
             audio[:, :, -ref_len:] = ref_codes[:, :, -ref_len:]
-        speaker_pos = input_ids.shape[1] - ref_len - 1
-        if spk_emb is not None and speaker_pos >= 0:
-            audio[:, :, speaker_pos] = config.audio_spk_token
-        mask = (
-            torch.ones_like(input_ids)
-            if attention_mask is None
-            else attention_mask.to(input_ids.device)
-        )
+        if spk_emb is not None:
+            audio[:, :, -ref_len - 1] = config.audio_spk_token
         eos = [] if config.eos_token_id is None else config.eos_token_id
         eos_ids = torch.as_tensor(eos, device=input_ids.device, dtype=input_ids.dtype).reshape(-1)
         pad_id = config.pad_token_id if config.pad_token_id is not None else 0
@@ -292,12 +296,14 @@ class OmniPlusOmni(OmniPlusForCausalLM):
             token = input_ids.new_full((1, 1), pad_id)
             if not text_done:
                 scores = output.logits[:, -1].float().clone()
-                seen = scores.gather(1, input_ids)
-                scores.scatter_(
-                    1,
-                    input_ids,
-                    torch.where(seen < 0, seen * repetition_penalty, seen / repetition_penalty),
-                )
+                if repetition_penalty != 1:
+                    seen_ids = input_ids[:, start:]
+                    seen = scores.gather(1, seen_ids)
+                    seen = torch.where(
+                        seen < 0, seen * repetition_penalty, seen / repetition_penalty
+                    )
+                    scores.scatter_(1, seen_ids, seen)
+
                 # 新生成的文本不再插入输入模态占位符
                 markers = list(config.audio_ids) if audio_features is not None else []
                 markers += config.image_ids if image_features is not None else []
@@ -333,7 +339,7 @@ class OmniPlusOmni(OmniPlusForCausalLM):
                 frame = frame.unsqueeze(-1) if (frame < config.audio_codebook_size).all() else None
             yield (None if text_done else token), frame
             text_done = text_done or bool(torch.isin(token, eos_ids).any())
-            if text_done and all(stopped):
+            if text_done and (audio_start is None or all(stopped)):
                 break
 
             # 追加输入、音频历史与 attention mask，继续解码音频尾部

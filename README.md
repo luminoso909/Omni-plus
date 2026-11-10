@@ -18,7 +18,7 @@ OmniPlus 以官方 **Qwen3-1.7B 非 Base** 为 Thinker，复用冻结的 SenseVo
 
 真实媒体资产及本轮 G3 数据包尚需准备，云端未执行，不能直接开始正式训练。独立只读评测、正式数据供应、全任务 Benchmark、性能计时和 Demo/发布缺口继续保留；B1 首次 Benchmark 在 G4D 结束时执行，G7 最终复核。 [前轮 A–D 缺口清单](docs/reports/OMNIPLUS_DEVELOPMENT_AUDIT.md) · [G7 最终执行手册](docs/cloud/G7_FINAL_RUNBOOK.md)
 
-G3–G7 手册现已覆盖，未实现入口在 G7 手册中明确标注。G3 文档在当前用户工作区有尚未提交的路径迁移，历史 P5 部分脚本/报告也尚未跟踪；云端应使用选定的干净提交，完整公开交付前另行处理这些已有改动。本轮未将它们混入文档提交。
+G3–G7 手册现已覆盖，未实现入口在 G7 手册中明确标注。旧 G3 手册已归档到 `docs/cloud/`，历史 P5 的脚本、报告和实验摘要已归档。当前 G3 启动步骤见上方工程审计，云端使用选定的干净提交。
 
 ### 1 历史验收成果（Historical validated work）
 
@@ -112,7 +112,7 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python scripts/run_experiment.py smoke --config configs/v2/r3_local.yaml --steps 4 --resume outputs/r3-local/recheck-part/step-000002.pt --run-dir outputs/r3-local/recheck-resumed
 ```
 
-每次运行使用新目录。`prepare` 只在完整版本契约相同时复用缓存；未知版本的旧回答声码被隔离，真实语音经锁定 Mimi 重编码。当前 A2A 为复述诊断，正式问答数据仍需目标音频溯源。`inspect` 使用 meta 参数统计；tiny 更新与原生 1.7B CUDA 训练分别验收。 [R3-L 报告](docs/stages/R3-local.md) · [G3 云端说明](docs/G3_CLOUD_RUNBOOK.md)
+每次运行使用新目录。`prepare` 只在完整版本契约相同时复用缓存；未知版本的旧回答声码被隔离，真实语音经锁定 Mimi 重编码。当前 A2A 为复述诊断，正式问答数据仍需目标音频溯源。`inspect` 使用 meta 参数统计；tiny 更新与原生 1.7B CUDA 训练分别验收。 [R3-L 报告](docs/stages/R3-local.md) · [G3 云端说明](docs/cloud/G3_CLOUD_RUNBOOK.md)
 
 R4-L 直接扩展上述入口，新增 `train/resume/evaluate/demo/profile`；本地配置对应 A、B、C-Vision、C-Audio、D。以下只使用已有有限缓存与随机 Tiny 模型：
 
